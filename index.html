@@ -235,6 +235,17 @@ function brandTitle(){return ransom([{w:'Battle of',c:'red'},{w:'the Board',c:'w
 var SUBBAR='';
 function nameCount(){return S.names.split('\n').filter(function(x){return x.trim()}).length}
 function count(){var n=S.names.split('\n').filter(function(x){return x.trim()}).length;return n+(n===1?' participant':' participants')}
+function syncPlayers(){
+  var n=S.names.split('\n').map(function(x){return x.trim()}).filter(Boolean),order;
+  if(S.randomized){var pool=n.slice();order=[];S.players.forEach(function(p){var i=pool.indexOf(p.name);if(i>-1){order.push(p.name);pool.splice(i,1)}});order=order.concat(pool)}
+  else order=n;
+  S.players=order.map(function(nm,i){return {id:i,name:nm,lives:3,mull:true,out:false,place:null,outRound:null}});
+  S.queue=S.players.map(function(p){return p.id});S.rOrder=S.queue.slice();S.ev=[];S.log=[];
+}
+function orderPanel(){
+  if(!S.players.length)return '';
+  return '<h2>Climbing order ('+S.players.length+')</h2><div class="panel"><ol class="draw">'+S.players.map(function(p){return '<li>'+esc(p.name)+'</li>'}).join('')+'</ol><p class="sub">'+(S.randomized?'Randomized. New names are added to the end.':'In the order typed above. Tap Randomize to shuffle.')+'</p></div>';
+}
 function drawNames(noShuffle){
   var n=S.names.split('\n').map(function(x){return x.trim()}).filter(Boolean);
   S.players=(noShuffle?n:shuffle(n)).map(function(nm,i){return {id:i,name:nm,lives:3,mull:true,out:false,place:null,outRound:null}});
@@ -242,8 +253,8 @@ function drawNames(noShuffle){
 }
 document.addEventListener('click',function(e){
   var b=e.target.closest('[data-a]');if(!b)return;var a=b.getAttribute('data-a');
-  if(a==='draw'){drawNames();S.drawnFrom=S.names}
-  else if(a==='start'){if(!(S.players.length&&S.drawnFrom===S.names))drawNames(true);if(S.players.length<2)return;snap();S.phase='round';S.round=1;resetTimer()}
+  if(a==='draw'){drawNames();S.randomized=true}
+  else if(a==='start'){syncPlayers();if(S.players.length<2)return;snap();S.phase='round';S.round=1;resetTimer()}
   else if(a==='sent'||a==='fell'||a==='skip')doAct(a);
   else if(a==='sd'){snap();startSD()}
   else if(a==='undo'){if(hist.length)S=Object.assign(init(),JSON.parse(hist.pop()))}
@@ -256,7 +267,7 @@ document.addEventListener('click',function(e){
 });
 document.addEventListener('input',function(e){
   var id=e.target.id;
-  if(id==='names'){S.names=e.target.value;var c=document.getElementById('cnt');if(c)c.textContent=count();var sb=document.getElementById('startbtn');if(sb)sb.disabled=nameCount()<2}
+  if(id==='names'){S.names=e.target.value;var c=document.getElementById('cnt');if(c)c.textContent=count();var sb=document.getElementById('startbtn');if(sb)sb.disabled=nameCount()<2;syncPlayers();var op=document.getElementById('orderpanel');if(op)op.innerHTML=orderPanel()}
   else if(id==='total')S.total=Math.max(1,parseInt(e.target.value)||1);
   else if(id==='angle')S.angle=parseInt(e.target.value)||35;
   else if(id==='obslen')S.obsLen=Math.max(0,parseInt(e.target.value)||0);
@@ -297,8 +308,9 @@ function render(){
   if(S.phase==='setup'){
     h+='<h2>Set up the competition</h2><div class="panel"><label for="names" class="sub">One competitor per line</label><textarea id="names" placeholder="Alex&#10;Sam&#10;Jordan">'+esc(S.names)+'</textarea><p class="sub" id="cnt" style="margin:8px 0 0;font-weight:600">'+count()+'</p>'+
     '<div class="row" style="margin-top:12px"><label>Number of boulders<input id="total" type="number" min="1" value="'+S.total+'"></label><label>Sudden Death starting angle (5° steps)<input id="angle" type="number" step="5" min="0" value="'+S.angle+'"></label><label>Observation time (seconds, 0 for none)<input id="obslen" type="number" step="15" min="0" value="'+obsLen()+'"></label></div>'+
-    '<div class="acts"><button class="b-hand" data-a="draw">Randomize</button><button class="b-go" id="startbtn" data-a="start"'+(nameCount()>=2?'':' disabled')+'>Start round 1</button></div>'+(S.players.length&&S.drawnFrom===S.names?'':'<p class="sub">Not randomized, so climbers go in the order typed above.</p>')+'</div>';
-    if(S.players.length){h+='<h2>Climbing order ('+S.players.length+')</h2><div class="panel"><ol class="draw">'+S.players.map(function(p){return '<li>'+esc(p.name)+'</li>'}).join('')+'</ol><p class="sub">Editing the names above? Randomize again to refresh the order.</p></div>'}
+    '<div class="acts"><button class="b-hand" data-a="draw">Randomize</button><button class="b-go" id="startbtn" data-a="start"'+(nameCount()>=2?'':' disabled')+'>Start round 1</button></div>'+'</div>';
+    if(!S.players.length&&nameCount())syncPlayers();
+    h+='<div id="orderpanel">'+orderPanel()+'</div>';
   }else{
     var cur=P(S.queue[0]),sd=S.phase==='sd';
     var title=S.phase==='done'?'Final standings':(sd?'Sudden Death, round '+S.sdRound+' at '+S.angle+'°':'Round '+S.round+' of '+S.total);
