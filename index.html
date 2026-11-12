@@ -245,7 +245,7 @@ function roster(){
   return h+'</tbody></table></div>';
 }
 function head(){
-  return '<div class="top"><div><h1>Battle of the Board</h1><p class="sub">Tension Board 2 competition, hosted by Rock Revolution</p><p class="sub link">Display code <b class="code">'+esc(LINK.code||'')+'</b> <span id="linkst">'+linkLabel()+'</span></p></div><div class="row"><button data-a="undo"'+(hist.length?'':' disabled')+'>Undo</button><button data-a="reset">'+(armed?'Confirm reset':'Reset')+'</button></div></div>';
+  return '<div class="top"><div><h1>Battle of the Board</h1><p class="sub">An elimination format competition on the Tension Board 2</p><p class="sub link">Display code <b class="code">'+esc(LINK.code||'')+'</b> <span id="linkst">'+linkLabel()+'</span></p></div><div class="row"><button data-a="undo"'+(hist.length?'':' disabled')+'>Undo</button><button data-a="reset">'+(armed?'Confirm reset':'Reset')+'</button></div></div>';
 }
 function modal(){
   var p=S.popup,h='<div class="ov"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt"><h2 id="mt">'+esc(p.t)+'</h2><p>'+esc(p.sub)+'</p>';

@@ -50,10 +50,14 @@ footer .chip{background:color-mix(in srgb,var(--go) 22%,transparent);color:var(-
 .podium div{text-align:center}
 .podium .pl{color:var(--mute);font-size:clamp(14px,1.6vw,28px)}
 .podium .pn{font:800 clamp(28px,3.6vw,68px)/1 "Barlow Condensed",sans-serif}
+.rest{list-style:none;margin:5vh 0 0;padding:0;columns:4;column-gap:3vw;text-align:left;font-size:clamp(14px,1.5vw,26px);color:var(--mute);max-width:90vw}
+.rest li{padding:.4vh 0;break-inside:avoid;color:var(--ink)}
+.rest li span{display:inline-block;width:2.2em;color:var(--mute)}
 .podium .p1 .pn{font-size:clamp(56px,9vw,180px);color:var(--mull)}
 /* flash */
 #flash{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;z-index:30;padding:4vw}
-#flash.on{display:flex;animation:pop .35s ease-out}
+#flash.on{display:flex;opacity:1}
+#flash.on.bye{opacity:0;transition:opacity .5s ease-in}
 #flash .word{font:800 clamp(90px,19vw,380px)/.85 "Barlow Condensed",sans-serif;letter-spacing:.01em}
 #flash .fn{font:800 clamp(36px,6vw,120px)/1 "Barlow Condensed",sans-serif;margin-bottom:2vh;overflow-wrap:anywhere}
 #flash .fs{font-size:clamp(22px,3vw,56px);margin-top:2.4vh;font-weight:600}
@@ -61,8 +65,6 @@ footer .chip{background:color-mix(in srgb,var(--go) 22%,transparent);color:var(-
 #flash.fell{background:var(--fall);color:#2a0705}
 #flash.out{background:#7d1610;color:#fff}
 #flash.skip{background:var(--mull);color:#2b1a02}
-@keyframes pop{from{transform:scale(1.08);opacity:0}to{transform:none;opacity:1}}
-@media (prefers-reduced-motion:reduce){#flash.on{animation:none}}
 /* round popup */
 #pop{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(6,8,10,.82);z-index:20;padding:4vh 4vw}
 #pop.on{display:flex}
@@ -156,15 +158,15 @@ $('fs').addEventListener('click',function(){var d=document.documentElement;if(do
 /* ---------- flash ---------- */
 function doFlash(f){
   var el=$('flash'),word,sub='';
-  if(f.k==='sent'){word='SENT!';sub='On to the next boulder'}
-  else if(f.k==='skip'){word='SKIP';sub='Skip used on this boulder'}
-  else if(f.k==='out'){word='ELIMINATED';sub=f.place?'Prize place '+f.place:''}
+  if(f.k==='sent'){word='SENT!';sub='Stand by for the next boulder'}
+  else if(f.k==='skip'){word='SKIP';sub='Live to climb another day'}
+  else if(f.k==='out'){word='ELIMINATED'}
   else{word='FELL';sub=f.lives+(f.lives===1?' life':' lives')+' left, back of the line'}
   el.className='';void el.offsetWidth;
   el.innerHTML='<div class="fn">'+esc(f.name)+'</div><div class="word">'+word+'</div>'+(sub?'<div class="fs">'+esc(sub)+'</div>':'');
   el.className='on '+(f.k==='skip'?'skip':f.k);
   flashUntil=Date.now()+2600;
-  clearTimeout(flashT);flashT=setTimeout(function(){el.className='';render()},2600);
+  clearTimeout(flashT);clearTimeout(el._bye);el._bye=setTimeout(function(){el.classList.add('bye')},2100);flashT=setTimeout(function(){el.className='';render()},2600);
   render();
 }
 
@@ -178,12 +180,12 @@ function head(){
   else if(s.phase==='round'){t='Round '+s.round+' of '+s.total;gr='<span class="g">'+g(s.round)+'</span>';sub=alive().length+' climbers still in'}
   else if(s.phase==='sd'){t='Sudden Death, round '+s.sdRound;gr='<span class="g sd">'+s.angle+'°</span>';sub=alive().length+' climbers still in, no skips'}
   else{t='Final results'}
-  return '<header><div><div class="brand">Battle of the Board</div><div class="host">Tension Board 2, hosted by Rock Revolution</div></div><div class="round"><div class="t">'+t+gr+'</div>'+(sub?'<div class="s">'+sub+'</div>':'')+'</div></header>';
+  return '<header><div><div class="brand">Battle of the Board</div><div class="host">An elimination format competition on the Tension Board 2</div></div><div class="round"><div class="t">'+t+gr+'</div>'+(sub?'<div class="s">'+sub+'</div>':'')+'</div></header>';
 }
 function render(){
   var st=$('stage');
   if(!last){
-    st.innerHTML='<header><div><div class="brand">Battle of the Board</div><div class="host">Tension Board 2, hosted by Rock Revolution</div></div></header><div class="center"><div class="big">Stand by</div><div class="lab">Waiting for the Tracker Device</div><div class="lab" id="bigst" style="max-width:70vw">'+esc($('st').textContent)+'</div></div><footer></footer>';
+    st.innerHTML='<header><div><div class="brand">Battle of the Board</div><div class="host">An elimination format competition on the Tension Board 2</div></div></header><div class="center"><div class="big">Stand by</div><div class="lab">Waiting for the Tracker Device</div><div class="lab" id="bigst" style="max-width:70vw">'+esc($('st').textContent)+'</div></div><footer></footer>';
     $('pop').className='';return;
   }
   var s=last,h=head();
@@ -194,7 +196,8 @@ function render(){
   }else if(s.phase==='done'){
     var by={};s.players.forEach(function(p){by[p.place]=p});
     function pd(n,c){var p=by[n];return p?'<div class="'+c+'"><div class="pl">'+(n===1?'Champion':n===2?'2nd place':'3rd place')+'</div><div class="pn">'+esc(p.name)+'</div></div>':''}
-    h+='<div class="center"><div class="podium">'+pd(2,'p2')+pd(1,'p1')+pd(3,'p3')+'</div></div><footer>'+s.players.length+' climbers competed</footer>';
+    var rest=s.players.filter(function(p){return p.place>3}).sort(function(a,b){return a.place-b.place});
+    h+='<div class="center"><div class="podium">'+pd(2,'p2')+pd(1,'p1')+pd(3,'p3')+'</div>'+(rest.length?'<ol class="rest">'+rest.map(function(p){return '<li><span>'+p.place+'</span>'+esc(p.name)+'</li>'}).join('')+'</ol>':'')+'</div><footer>'+s.players.length+' climbers competed</footer>';
   }else{
     var cur=P(s.queue[0]),sd=s.phase==='sd';
     h+='<div class="main"><section class="now">';
@@ -216,7 +219,7 @@ function render(){
   var pop=$('pop');
   if(s.popup&&Date.now()>=flashUntil){
     var b='<div class="box"><h1>'+esc(s.popup.t)+'</h1><p>'+esc(s.popup.sub)+'</p><div class="cols">';
-    s.popup.lists.forEach(function(l){if(l.i.length)b+='<div><h3>'+esc(l.h)+'</h3><ol>'+l.i.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ol></div>'});
+    s.popup.lists.forEach(function(l){if(l.i.length)b+='<div><h3>'+esc(l.h)+'</h3><ol>'+l.i.map(function(x){return '<li>'+esc(String(x).replace(/ \(prize place \d+\)$/,''))+'</li>'}).join('')+'</ol></div>'});
     pop.innerHTML=b+'</div></div>';pop.className='on';
   }else pop.className='';
 }
