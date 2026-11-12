@@ -49,6 +49,11 @@ tr.out td{color:#5c5c5c}
 tr.cur td{font-weight:700;background:rgba(227,18,27,.22)}
 .heart{color:var(--red);letter-spacing:2px}
 .now .heart{display:block;font-size:46px;line-height:1;letter-spacing:6px;margin:2px 0 10px}
+.now .heart .last{display:inline-block;transform-origin:50% 60%;animation:lastlife 1.3s ease-in-out infinite}
+@keyframes lastlife{0%,100%{transform:translateX(0) rotate(0);color:var(--red)}8%{transform:translateX(-.08em) rotate(-8deg)}16%{transform:translateX(.08em) rotate(8deg)}24%{transform:translateX(-.06em) rotate(-6deg)}32%{transform:translateX(.06em) rotate(6deg)}40%{transform:translateX(0) rotate(0);color:var(--w)}50%{color:var(--red)}60%{color:var(--w)}70%{color:var(--red)}}
+@keyframes lastlife-calm{0%,100%{color:var(--red)}50%{color:var(--w)}}
+@media (prefers-reduced-motion:reduce){.last{animation:lastlife-calm 1.2s steps(1) infinite!important}}
+
 .tag{display:inline-block;padding:1px 7px;font-size:11px;font-weight:700;text-transform:uppercase;background:var(--w);color:var(--k)}
 .tag.used{background:transparent;color:#5c5c5c;border:1px solid var(--line);text-decoration:line-through}
 ol.draw{columns:2;padding-left:30px;margin:10px 0 0}
@@ -244,7 +249,7 @@ document.addEventListener('input',function(e){
 });
 
 document.addEventListener('change',function(e){if(e.target.id==='angle'){S.angle=Math.max(0,Math.round((parseInt(e.target.value)||35)/5)*5);e.target.value=S.angle;save()}});
-function hearts(p){var m=3;return '<span class="heart" aria-label="'+p.lives+' lives">'+'♥'.repeat(Math.max(p.lives,0))+'♡'.repeat(Math.max(m-p.lives,0))+'</span>'}
+function hearts(p){var m=3;return '<span class="heart" aria-label="'+p.lives+' lives"><span class="'+(p.lives===1&&!p.out?'last':'')+'">'+'♥'.repeat(Math.max(p.lives,0))+'</span>'+'♡'.repeat(Math.max(m-p.lives,0))+'</span>'}
 function status(p){
   if(p.out)return 'Out, prize place '+p.place;
   if(S.phase==='done'&&p.place===1)return 'Winner';

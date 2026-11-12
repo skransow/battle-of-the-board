@@ -25,6 +25,11 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:2vw
 .who{font:400 clamp(52px,9vw,180px)/.95 Anton,Impact,sans-serif;margin:1.6vh 0 2.4vh;overflow-wrap:anywhere}
 .hearts{font-size:clamp(56px,8.4vw,160px);line-height:.9;color:var(--red);letter-spacing:.08em;text-transform:none}
 .hearts .e{color:#333}
+.hearts .last{display:inline-block;transform-origin:50% 60%;animation:lastlife 1.3s ease-in-out infinite}
+@keyframes lastlife{0%,100%{transform:translateX(0) rotate(0);color:var(--red)}8%{transform:translateX(-.08em) rotate(-8deg)}16%{transform:translateX(.08em) rotate(8deg)}24%{transform:translateX(-.06em) rotate(-6deg)}32%{transform:translateX(.06em) rotate(6deg)}40%{transform:translateX(0) rotate(0);color:var(--w)}50%{color:var(--red)}60%{color:var(--w)}70%{color:var(--red)}}
+@keyframes lastlife-calm{0%,100%{color:var(--red)}50%{color:var(--w)}}
+@media (prefers-reduced-motion:reduce){.last{animation:lastlife-calm 1.2s steps(1) infinite!important}}
+
 .meta{display:flex;align-items:center;gap:2vw;flex-wrap:wrap;margin-top:2vh}
 .pill{padding:.35em .8em;font-size:clamp(12px,1.35vw,24px);background:var(--w);color:var(--k);transform:rotate(-1.5deg)}
 .pill.off{background:transparent;color:#5c5c5c;border:2px solid #333;text-decoration:line-through;transform:none}
@@ -194,7 +199,7 @@ function doFlash(f){
 
 /* ---------- render ---------- */
 function P(id){return last.players.filter(function(p){return p.id===id})[0]}
-function hearts(n){n=Math.max(n,0);return '♥'.repeat(n)+'<span class="e">'+'♥'.repeat(Math.max(3-n,0))+'</span>'}
+function hearts(n){n=Math.max(n,0);return '<span class="f'+(n===1?' last':'')+'">'+'♥'.repeat(n)+'</span><span class="e">'+'♥'.repeat(Math.max(3-n,0))+'</span>'}
 function alive(){return last.players.filter(function(p){return !p.out})}
 function head(){
   var s=last,t='',gr='',sub='';
