@@ -230,7 +230,7 @@ function alive(){return last.players.filter(function(p){return !p.out})}
 function head(){
   var s=last,t='',gr='',sub='';
   if(s.phase==='setup'){t=''}
-  else if(s.phase==='round'){t='Round '+s.round+' of '+s.total;sub=alive().length+' climbers still in'}
+  else if(s.phase==='round'){t='Round '+s.round+(s.round<=s.total?' of '+s.total:'');sub=alive().length+' climbers still in'}
   else if(s.phase==='sd'){t='Sudden Death, round '+s.sdRound;gr='<span class="g sd">'+s.angle+'°</span>';sub=alive().length+' climbers still in, no skips'}
   else{t='Final results'}
   return '<header><div><div class="brand">'+brandTitle()+'</div><div class="host">'+SUBBAR+'</div></div><div class="round"><div class="t">'+t+gr+'</div>'+(sub?'<div class="s">'+sub+'</div>':'')+'</div></header>';
@@ -285,7 +285,7 @@ var cardT=null,cardB=null;
 function showCard(s){
   var el=$('card'),big,sub,len;
   if(s.phase==='sd'){big=s.sdRound===1?'Sudden Death':'Round '+s.sdRound;sub=(s.sdRound===1?'':'Sudden Death, ')+'Board at '+s.angle+'°'}
-  else{big='Round '+s.round;sub=s.round===s.total?'Final boulder':'Boulder '+s.round+' of '+s.total}
+  else{big='Round '+s.round;sub=s.round>=s.total?'Final boulder':'Boulder '+s.round+' of '+s.total}
   len=big.length;
   var words=big.split(' ');
   el.className='';void el.offsetWidth;
