@@ -229,19 +229,31 @@ $('fs').addEventListener('click',function(){var d=document.documentElement;if(do
 /* ---------- elimination sounds ---------- */
 var SFX=["ack", "bonk", "explosion", "fail", "fail-trumpet", "gunshot", "lego-die", "mystery", "oof", "punch", "punch-hd", "snake", "vine-boom", "wasted", "wilhelm", "yoda"],sfxOn=true,lastSfx=null,sfx={};
 try{sfxOn=localStorage.getItem('botb-sound')!=='off'}catch(e){}
-SFX.forEach(function(n){var a=new Audio('sounds/elim/'+n+'.mp3');a.preload='auto';sfx[n]=a});
-var roundSfx=new Audio('sounds/round.mp3');roundSfx.preload='auto';
-function playRound(force){if(!sfxOn&&!force)return;try{roundSfx.pause();roundSfx.currentTime=0}catch(e){}var p=roundSfx.play();if(p&&p.catch)p.catch(function(){sndHint(true)})}
+var SV='?v=5',AC=null,BUF={};
+try{var ACtor=window.AudioContext||window.webkitAudioContext;if(ACtor)AC=new ACtor({latencyHint:'interactive'})}catch(e){}
+function loadSnd(key,url){
+  if(!AC){var a=new Audio(url);a.preload='auto';BUF[key]=a;return}
+  fetch(url).then(function(r){return r.arrayBuffer()}).then(function(ab){return new Promise(function(ok,no){AC.decodeAudioData(ab,ok,no)})}).then(function(b){BUF[key]=b}).catch(function(){var a=new Audio(url);a.preload='auto';BUF[key]=a});
+}
+SFX.forEach(function(n){loadSnd(n,'sounds/elim/'+n+'.mp3'+SV)});
+loadSnd('round','sounds/round.mp3'+SV);
+function playKey(key){
+  var b=BUF[key];if(!b)return;
+  if(b instanceof HTMLMediaElement){try{b.pause();b.currentTime=0}catch(e){}var p=b.play();if(p&&p.catch)p.catch(function(){sndHint(true)});return}
+  if(AC.state!=='running'){AC.resume().catch(function(){});if(AC.state!=='running'){sndHint(true)}}
+  var src=AC.createBufferSource();src.buffer=b;src.connect(AC.destination);src.start(0);
+}
+function playRound(force){if(!sfxOn&&!force)return;playKey('round')}
 function sndHint(show){var h=$('sndhint');if(h)h.className=show&&sfxOn?'on':''}
 function sndLabel(){$('snd').textContent='Sound: '+(sfxOn?'on':'off')}
 function playElim(force){
   if(!sfxOn&&!force)return;
   var pool=SFX.filter(function(n){return n!==lastSfx}),n=pool[Math.floor(Math.random()*pool.length)];lastSfx=n;
-  var a=sfx[n];try{a.pause();a.currentTime=0}catch(e){}
-  var p=a.play();if(p&&p.catch)p.catch(function(){sndHint(true)});
+  playKey(n);
 }
-document.addEventListener('pointerdown',function(){sndHint(false)},{passive:true});
-document.addEventListener('keydown',function(){sndHint(false)});
+function unlock(){sndHint(false);if(AC&&AC.state!=='running')AC.resume().catch(function(){})}
+document.addEventListener('pointerdown',unlock,{passive:true});
+document.addEventListener('keydown',unlock);
 if(navigator.userActivation&&!navigator.userActivation.hasBeenActive)setTimeout(function(){if(!navigator.userActivation.hasBeenActive)sndHint(true)},800);
 $('snd').addEventListener('click',function(){sfxOn=!sfxOn;try{localStorage.setItem('botb-sound',sfxOn?'on':'off')}catch(e){}sndLabel();if(!sfxOn)sndHint(false)});
 $('sndtest').addEventListener('click',function(){playElim(true)});
