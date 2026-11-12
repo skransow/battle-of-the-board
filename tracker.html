@@ -48,7 +48,8 @@ textarea{min-height:170px}
 .stats{display:flex;gap:18px;flex-wrap:wrap;margin-top:4px;color:var(--g);text-transform:uppercase;font-size:12px}
 .stats b{color:var(--w);font-size:15px}
 .scroll{overflow-x:auto}
-table{width:100%;border-collapse:collapse;min-width:420px;font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td:last-child{white-space:nowrap}
 th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
 th{color:var(--g);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
 tr.out td{color:#5c5c5c}
@@ -280,10 +281,10 @@ document.addEventListener('input',function(e){
 document.addEventListener('change',function(e){if(e.target.id==='angle'){S.angle=Math.max(0,Math.round((parseInt(e.target.value)||35)/5)*5);e.target.value=S.angle;save()}});
 function hearts(p){var m=3;return '<span class="heart" aria-label="'+p.lives+' lives"><span class="'+(p.lives===1&&!p.out?'last':'')+'">'+'♥'.repeat(Math.max(p.lives,0))+'</span>'+'♡'.repeat(Math.max(m-p.lives,0))+'</span>'}
 function status(p){
-  if(p.out)return 'Out, prize place '+p.place;
+  if(p.out)return 'Out, place '+p.place;
   if(S.phase==='done'&&p.place===1)return 'Winner';
   var i=S.queue.indexOf(p.id);
-  if(i===0)return 'Climbing now';if(i>0)return 'In line ('+i+' ahead)';
+  if(i===0)return 'Climbing';if(i===1)return 'Next up';if(i>1)return '#'+(i+1)+' in line';
   if(S.sent.indexOf(p.id)>-1)return 'Sent';if(S.skipped.indexOf(p.id)>-1)return 'Used skip';
   if(S.fell.indexOf(p.id)>-1)return 'Fell';return 'Waiting';
 }
@@ -293,7 +294,7 @@ function roster(){
   var rows=S.phase==='done'?S.players.slice().sort(function(a,b){return a.place-b.place}):act.concat(out);
   var h='<div class="scroll"><table><thead><tr><th>Name</th><th>Lives</th><th>Skip</th><th>Status</th></tr></thead><tbody>';
   rows.forEach(function(p){
-    var m=S.phase==='sd'||S.phase==='done'?'<span class="tag used">n/a</span>':(p.mull?'<span class="tag">Available</span>':'<span class="tag used">Used</span>');
+    var m=S.phase==='sd'||S.phase==='done'?'<span class="tag used">n/a</span>':(p.mull?'<span class="tag">Yes</span>':'<span class="tag used">Used</span>');
     h+='<tr class="'+(p.out?'out':(S.queue[0]===p.id?'cur':''))+'"><td>'+esc(p.name)+'</td><td>'+hearts(p)+'</td><td>'+m+'</td><td>'+status(p)+'</td></tr>';
   });
   return h+'</tbody></table></div>';
