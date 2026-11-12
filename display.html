@@ -107,11 +107,15 @@ footer .chip{border:2px solid var(--w);color:var(--w);padding:.1em .6em}
 #connect input{width:100%;font:400 72px Anton,Impact,sans-serif;letter-spacing:.3em;text-align:center;text-transform:uppercase;background:var(--k);color:var(--w);border:3px solid var(--w);border-radius:0;padding:10px 0 10px .3em}
 #connect button{margin-top:18px;width:100%;font:700 20px "Space Mono",monospace;text-transform:uppercase;background:var(--red);color:var(--k);border:0;border-radius:0;padding:16px;cursor:pointer}
 input:focus-visible,button:focus-visible{outline:3px solid var(--red);outline-offset:3px}
-#bar{position:fixed;right:14px;bottom:12px;display:flex;gap:10px;align-items:center;font-size:12px;color:var(--g);z-index:35;opacity:.55;transition:opacity .2s}
-#bar:hover,#bar:focus-within{opacity:1}
-#bar .mb{font:700 11px "Space Mono",monospace;text-transform:uppercase;background:var(--k);color:var(--w);border:1px solid #444;padding:6px 10px;text-decoration:none}
-#bar button{font:700 11px "Space Mono",monospace;text-transform:uppercase;background:var(--k);color:var(--w);border:1px solid #444;border-radius:0;padding:6px 10px;cursor:pointer}
-.dot{width:10px;height:10px;display:inline-block;background:var(--red)}
+#bar{position:fixed;right:14px;bottom:12px;display:flex;flex-direction:column;align-items:flex-end;gap:8px;font-size:12px;color:var(--g);z-index:35}
+#bartog{display:flex;align-items:center;gap:7px;font:700 14px/1 "Space Mono",monospace;background:var(--k);color:var(--w);border:1px solid #333;border-radius:0;padding:7px 9px;cursor:pointer;opacity:.35;transition:opacity .2s}
+#bartog:hover,#bartog:focus-visible,#bartog[aria-expanded="true"]{opacity:1}
+#barpanel{display:flex;flex-direction:column;gap:8px;width:300px;max-width:calc(100vw - 28px);background:var(--k);border:2px solid var(--w);box-shadow:6px 6px 0 var(--red);padding:12px}
+#barpanel[hidden]{display:none}
+#barpanel .bst{display:flex;gap:8px;align-items:center;color:var(--w);font-size:12px;line-height:1.3;padding-bottom:4px}
+#barpanel .mb,#barpanel button{font:700 11px "Space Mono",monospace;text-transform:uppercase;background:var(--k);color:var(--w);border:1px solid #444;border-radius:0;padding:8px 10px;cursor:pointer;text-decoration:none;text-align:left}
+#barpanel .mb:hover,#barpanel button:hover{border-color:var(--w)}
+.dot{width:10px;height:10px;display:inline-block;flex:none;background:var(--red)}
 .dot.live{background:#3ddc84}
 #bigst{max-width:70vw;background:transparent;color:var(--g);letter-spacing:.02em}
 
@@ -145,7 +149,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--red);outline-of
     <button type="submit">Connect display</button>
   </form>
 </div>
-<div id="bar"><span class="dot" id="dot"></span><span id="st">Not connected</span><button id="chg">Change code</button><button id="fs">Full screen</button><a class="mb" href="./">Menu</a></div>
+<div id="bar"><div id="barpanel" hidden><div class="bst"><span class="dot" id="dot"></span><span id="st">Not connected</span></div><button id="chg">Change code</button><button id="fs">Full screen</button><a class="mb" href="./">Menu</a></div><button id="bartog" aria-expanded="false" aria-controls="barpanel" aria-label="Connection and settings"><span class="dot" id="dot2"></span>&#8943;</button></div>
 <script>
 var firstState=true,code=null,clients=[],gotState=false,lastSent=0,last=null,seen=0,first=true,flashUntil=0,tEnd=0,obs={st:'done',left:0},retry=null,flashT=null;
 try{code=localStorage.getItem('botb-display-code')}catch(e){}
@@ -154,7 +158,7 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return
 function ransom(lines){var rot=[-4,3,-2,5,-3,2,-5,4,-1,3,-3,2],yy=[0,-.04,.03,-.02,.05,0,-.05,.02],k=0;return '<span class="ransom" aria-label="'+lines.map(function(l){return l.w}).join(' ')+'">'+lines.map(function(l){return '<span class="rl" aria-hidden="true">'+l.w.split('').map(function(ch){if(ch===' ')return '<span class="sp"></span>';var i=k++;return '<span class="rt '+l.c+'" style="--r:'+rot[i%rot.length]+'deg;--y:'+yy[i%yy.length]+'em">'+esc(ch)+'</span>'}).join('')+'</span>'}).join('')+'</span>'}
 function brandTitle(){return ransom([{w:'Battle of',c:'red'},{w:'the Board',c:'wht'}])}
 var SUBBAR='';
-function status(t,live){$('st').textContent=t;$('dot').className='dot'+(live?' live':'');var b=$('bigst');if(b)b.textContent=t}
+function status(t,live){$('st').textContent=t;$('dot').className=$('dot2').className='dot'+(live?' live':'');var b=$('bigst');if(b)b.textContent=t}
 
 /* ---------- link ---------- */
 var BROKERS=[{u:'wss://public.cloud.shiftr.io',o:{username:'public',password:'public'}},{u:'wss://broker.emqx.io:8084/mqtt'},{u:'wss://broker.hivemq.com:8884/mqtt'}];
@@ -196,7 +200,11 @@ function onData(m){
 }
 function showConnect(){$('ch').innerHTML=brandTitle();$('connect').className='on';$('ci').value=code||'';setTimeout(function(){$('ci').focus()},50)}
 $('cf').addEventListener('submit',function(e){e.preventDefault();var v=$('ci').value.trim().toUpperCase();if(v.length!==4)return;code=v;try{localStorage.setItem('botb-display-code',v)}catch(x){}$('connect').className='';first=true;connect()});
-$('chg').addEventListener('click',function(){showConnect()});
+$('chg').addEventListener('click',function(){barOpen(false);showConnect()});
+function barOpen(o){$('barpanel').hidden=!o;$('bartog').setAttribute('aria-expanded',o?'true':'false')}
+$('bartog').addEventListener('click',function(e){e.stopPropagation();barOpen($('barpanel').hidden)});
+document.addEventListener('click',function(e){if(!$('bar').contains(e.target))barOpen(false)});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')barOpen(false)});
 $('fs').addEventListener('click',function(){var d=document.documentElement;if(document.fullscreenElement)document.exitFullscreen();else if(d.requestFullscreen)d.requestFullscreen()});
 
 /* ---------- flash ---------- */
