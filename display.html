@@ -219,7 +219,7 @@ function render(){
   var pop=$('pop');
   if(s.popup&&Date.now()>=flashUntil){
     var b='<div class="box"><h1>'+esc(s.popup.t)+'</h1><p>'+esc(s.popup.sub)+'</p><div class="cols">';
-    s.popup.lists.forEach(function(l){if(l.i.length)b+='<div><h3>'+esc(l.h)+'</h3><ol>'+l.i.map(function(x){return '<li>'+esc(String(x).replace(/ \(prize place \d+\)$/,''))+'</li>'}).join('')+'</ol></div>'});
+    s.popup.lists.forEach(function(l){if(l.i.length)b+='<div><h3>'+esc(l.h)+'</h3><ol>'+l.i.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ol></div>'});
     pop.innerHTML=b+'</div></div>';pop.className='on';
   }else pop.className='';
 }
