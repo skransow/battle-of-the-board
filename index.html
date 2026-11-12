@@ -58,7 +58,7 @@ ol.draw{columns:2;padding-left:26px;margin:10px 0 0}
 </style>
 <script src="vendor/jspdf.umd.min.js"></script>
 <script src="vendor/jspdf.plugin.autotable.min.js"></script>
-<script src="vendor/peerjs.min.js"></script>
+<script src="vendor/mqtt.min.js"></script>
 </head>
 <body>
 <main id="app"></main>
@@ -171,31 +171,29 @@ function doAct(a){
   after();
 }
 
-var LINK={peer:null,conns:[],code:null,status:'Starting display link'};
+var BROKERS=[{u:'wss://public.cloud.shiftr.io',o:{username:'public',password:'public'}},{u:'wss://broker.emqx.io:8084/mqtt'},{u:'wss://broker.hivemq.com:8884/mqtt'}];
+(function(){var b=null;try{b=new URLSearchParams(location.search).get('broker')}catch(e){}if(b)BROKERS=[{u:b}]})();
+var LINK={clients:[],code:null,lastSeen:0};
+function topic(x){return 'rockrevolution/botb/v1/'+LINK.code+'/'+x}
 function linkCode(){var c=null;try{c=localStorage.getItem('botb-code')}catch(e){}if(!c||c.length!==4){var A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';c='';for(var i=0;i<4;i++)c+=A[Math.floor(Math.random()*A.length)];try{localStorage.setItem('botb-code',c)}catch(e){}}return c}
-function liveCount(){LINK.conns=LINK.conns.filter(function(c){return c.open});return LINK.conns.length}
-function linkLabel(){var n=liveCount();return n?(n>1?n+' displays connected':'Display connected'):LINK.status}
+function upCount(){return LINK.clients.filter(function(c){return c.connected}).length}
+function linkLabel(){if(Date.now()-LINK.lastSeen<15000)return 'Display connected';if(!window.mqtt)return 'Display link unavailable. Check the internet connection and reload.';return upCount()?'Waiting for a display':'Connecting to the message server'}
 function refreshLink(){var el=document.getElementById('linkst');if(el)el.textContent=linkLabel()}
-function linkStatus(t){LINK.status=t;refreshLink()}
-function payload(){return {type:'state',s:{phase:S.phase,round:S.round,total:S.total,angle:S.angle,sdRound:S.sdRound,players:S.players,queue:S.queue,sent:S.sent,skipped:S.skipped,popup:S.popup||null,flash:S.flash||null},timer:{run:!!tInt&&tLeft>0,left:tLeft}}}
-function broadcast(){if(!liveCount())return;var m=payload();LINK.conns.forEach(function(c){try{c.send(m)}catch(e){}})}
+function payload(){return {type:'state',sentAt:Date.now(),s:{phase:S.phase,round:S.round,total:S.total,angle:S.angle,sdRound:S.sdRound,players:S.players,queue:S.queue,sent:S.sent,skipped:S.skipped,popup:S.popup||null,flash:S.flash||null},timer:{run:!!tInt&&tLeft>0,left:tLeft}}}
+function pub(c,m){if(c.connected)try{c.publish(topic('state'),m,{retain:true,qos:0})}catch(e){}}
+function broadcast(){if(!LINK.code)return;var m=JSON.stringify(payload());LINK.clients.forEach(function(c){pub(c,m)})}
 function startLink(){
-  if(!window.Peer){linkStatus('Display link unavailable. Check the internet connection and reload.');return}
-  var p;try{p=new Peer('botb-'+LINK.code,{debug:0})}catch(e){linkStatus('Display link unavailable on this browser.');return}
-  LINK.peer=p;
-  p.on('open',function(){linkStatus('Waiting for a display')});
-  p.on('connection',function(c){
-    c.on('open',function(){LINK.conns.push(c);try{c.send(payload())}catch(e){}refreshLink()});
-    c.on('data',function(m){if(m&&m.type==='hello')try{c.send(payload())}catch(e){}});
-    c.on('close',function(){setTimeout(refreshLink,50)});
-    c.on('error',function(){setTimeout(refreshLink,50)});
+  if(!window.mqtt){refreshLink();return}
+  BROKERS.forEach(function(b){
+    var o=Object.assign({clientId:'botbT'+Math.random().toString(16).slice(2,10),reconnectPeriod:3000,connectTimeout:8000,clean:true,keepalive:30},b.o||{});
+    var c;try{c=mqtt.connect(b.u,o)}catch(e){return}
+    LINK.clients.push(c);
+    c.on('connect',function(){c.subscribe(topic('hello'));pub(c,JSON.stringify(payload()));refreshLink()});
+    c.on('message',function(t,msg){LINK.lastSeen=Date.now();refreshLink();if(String(msg)==='join')pub(c,JSON.stringify(payload()))});
+    c.on('close',refreshLink);c.on('offline',refreshLink);c.on('error',function(){});
   });
-  p.on('disconnected',function(){linkStatus('Display link dropped, reconnecting');setTimeout(function(){if(!p.destroyed)try{p.reconnect()}catch(e){}},2000)});
-  p.on('error',function(e){var t=e&&e.type;if(t==='peer-unavailable')return;
-    linkStatus(t==='unavailable-id'?'Reclaiming display code':'Display link problem, retrying');
-    if(t==='unavailable-id'||t==='network'||t==='server-error'||t==='socket-error'||t==='socket-closed'||t==='browser-incompatible'){try{p.destroy()}catch(x){}setTimeout(startLink,4000)}});
+  setInterval(refreshLink,5000);
 }
-document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&LINK.peer&&LINK.peer.disconnected&&!LINK.peer.destroyed)try{LINK.peer.reconnect()}catch(e){}});
 function count(){var n=S.names.split('\n').filter(function(x){return x.trim()}).length;return n+(n===1?' participant':' participants')}
 function drawNames(noShuffle){
   var n=S.names.split('\n').map(function(x){return x.trim()}).filter(Boolean);

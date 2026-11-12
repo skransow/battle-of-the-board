@@ -89,7 +89,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--mull);outline-o
 .dot{width:10px;height:10px;border-radius:50%;background:var(--fall);display:inline-block}
 .dot.live{background:var(--go)}
 </style>
-<script src="vendor/peerjs.min.js"></script>
+<script src="vendor/mqtt.min.js"></script>
 </head>
 <body>
 <main id="stage"></main>
@@ -106,7 +106,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--mull);outline-o
 </div>
 <div id="bar"><span class="dot" id="dot"></span><span id="st">Not connected</span><button id="chg">Change code</button><button id="fs">Full screen</button></div>
 <script>
-var code=null,peer=null,conn=null,last=null,seen=0,first=true,flashUntil=0,tEnd=0,retry=null,flashT=null;
+var code=null,clients=[],gotState=false,lastSent=0,last=null,seen=0,first=true,flashUntil=0,tEnd=0,retry=null,flashT=null;
 try{code=localStorage.getItem('botb-display-code')}catch(e){}
 function $(id){return document.getElementById(id)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
@@ -114,44 +114,44 @@ function g(n){return 'V'+(n+3)}
 function status(t,live){$('st').textContent=t;$('dot').className='dot'+(live?' live':'');var b=$('bigst');if(b)b.textContent=t}
 
 /* ---------- link ---------- */
-function later(ms){clearTimeout(retry);retry=setTimeout(connect,ms||3000)}
+var BROKERS=[{u:'wss://public.cloud.shiftr.io',o:{username:'public',password:'public'}},{u:'wss://broker.emqx.io:8084/mqtt'},{u:'wss://broker.hivemq.com:8884/mqtt'}];
+(function(){var b=null;try{b=new URLSearchParams(location.search).get('broker')}catch(e){}if(b)BROKERS=[{u:b}]})();
+function topic(x){return 'rockrevolution/botb/v1/'+code+'/'+x}
+function upd(){
+  var n=clients.filter(function(c){return c.connected}).length;
+  if(!window.mqtt)status('Link library failed to load. Check the internet connection and reload.');
+  else if(!n)status('Connecting to the message server');
+  else if(!gotState)status('Connected. Waiting for the Tracker Device with code '+code+'. Check the code and that the tracker page is open.');
+  else status('Live, code '+code,true);
+}
 function connect(){
-  clearTimeout(retry);
+  clients.forEach(function(c){try{c.end(true)}catch(e){}});clients=[];gotState=false;lastSent=0;last=null;tEnd=0;render();
   if(!code){showConnect();return}
-  if(!window.Peer){status('Link library failed to load. Check the internet connection and reload.');return}
-  if(!peer||peer.destroyed){
-    try{peer=new Peer({debug:0})}catch(e){status('This browser cannot run the display link.');return}
-    peer.on('open',dial);
-    peer.on('disconnected',function(){status('Link dropped, reconnecting');setTimeout(function(){if(peer&&!peer.destroyed)try{peer.reconnect()}catch(e){}},2000)});
-    peer.on('error',function(e){var t=e&&e.type;
-      if(t==='peer-unavailable'){status('No tracker found for code '+code+'. Is the tracker open on the Tracker Device? Retrying');later(4000)}
-      else{status('Link problem, retrying');try{peer.destroy()}catch(x){}later(4000)}});
-    status('Connecting to '+code);
-  }else if(peer.open)dial();
+  if(!window.mqtt){upd();return}
+  BROKERS.forEach(function(b){
+    var o=Object.assign({clientId:'botbD'+Math.random().toString(16).slice(2,10),reconnectPeriod:3000,connectTimeout:8000,clean:true,keepalive:30},b.o||{});
+    var c;try{c=mqtt.connect(b.u,o)}catch(e){return}
+    clients.push(c);
+    c.on('connect',function(){c.subscribe(topic('state'));try{c.publish(topic('hello'),'join')}catch(e){}upd()});
+    c.on('message',function(t,m){var d;try{d=JSON.parse(String(m))}catch(e){return}onData(d)});
+    c.on('close',upd);c.on('offline',upd);c.on('error',function(){});
+  });
+  upd();
 }
-function dial(){
-  if(conn)try{conn.close()}catch(e){}
-  status('Connecting to '+code);
-  var c=peer.connect('botb-'+code,{reliable:true});conn=c;
-  c.on('open',function(){status('Live, code '+code,true);try{c.send({type:'hello'})}catch(e){}});
-  c.on('data',onData);
-  c.on('close',function(){if(conn!==c)return;status('Connection lost, reconnecting');later(2500)});
-  c.on('error',function(){if(conn!==c)return;later(3000)});
-}
+setInterval(function(){clients.forEach(function(c){if(c.connected)try{c.publish(topic('hello'),'ping')}catch(e){}});upd()},5000);
 function onData(m){
-  if(!m||m.type!=='state')return;
+  if(!m||m.type!=='state'||!(m.sentAt>lastSent))return;
+  lastSent=m.sentAt;gotState=true;
   var s=m.s;
   if(s.flash&&s.flash.t>seen){if(!first)doFlash(s.flash);seen=s.flash.t}
   first=false;
-  tEnd=m.timer&&m.timer.run?Date.now()+m.timer.left*1000:0;
-  last=s;render();
+  tEnd=m.timer&&m.timer.run?m.sentAt+m.timer.left*1000:0;
+  last=s;render();upd();
 }
 function showConnect(){$('connect').className='on';$('ci').value=code||'';setTimeout(function(){$('ci').focus()},50)}
 $('cf').addEventListener('submit',function(e){e.preventDefault();var v=$('ci').value.trim().toUpperCase();if(v.length!==4)return;code=v;try{localStorage.setItem('botb-display-code',v)}catch(x){}$('connect').className='';first=true;connect()});
 $('chg').addEventListener('click',function(){showConnect()});
 $('fs').addEventListener('click',function(){var d=document.documentElement;if(document.fullscreenElement)document.exitFullscreen();else if(d.requestFullscreen)d.requestFullscreen()});
-/* watchdog: if the channel silently died, redial */
-setInterval(function(){if(code&&peer&&peer.open&&(!conn||!conn.open))dial()},10000);
 
 /* ---------- flash ---------- */
 function doFlash(f){

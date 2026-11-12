@@ -5,4 +5,4 @@ Live tracker for the Battle of the Board Tension Board 2 competition, hosted by 
 - `index.html` is the tracker. Run the event from it on the iPad.
 - `display.html` is the live display for the laptop. Enter the 4-character display code shown at the top of the tracker.
 
-The two pages link directly to each other through PeerJS, and both need an internet connection to find each other. Event progress is saved in the iPad's browser.
+The tracker sends live updates through free public MQTT message servers (shiftr.io, EMQX and HiveMQ), and the display listens for them. Both devices need an internet connection. Event progress is saved in the tracker device's browser.
