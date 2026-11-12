@@ -109,6 +109,7 @@ footer .chip{border:2px solid var(--w);color:var(--w);padding:.1em .6em}
 input:focus-visible,button:focus-visible{outline:3px solid var(--red);outline-offset:3px}
 #bar{position:fixed;right:14px;bottom:12px;display:flex;gap:10px;align-items:center;font-size:12px;color:var(--g);z-index:35;opacity:.55;transition:opacity .2s}
 #bar:hover,#bar:focus-within{opacity:1}
+#bar .mb{font:700 11px "Space Mono",monospace;text-transform:uppercase;background:var(--k);color:var(--w);border:1px solid #444;padding:6px 10px;text-decoration:none}
 #bar button{font:700 11px "Space Mono",monospace;text-transform:uppercase;background:var(--k);color:var(--w);border:1px solid #444;border-radius:0;padding:6px 10px;cursor:pointer}
 .dot{width:10px;height:10px;display:inline-block;background:var(--red)}
 .dot.live{background:#3ddc84}
@@ -144,7 +145,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--red);outline-of
     <button type="submit">Connect display</button>
   </form>
 </div>
-<div id="bar"><span class="dot" id="dot"></span><span id="st">Not connected</span><button id="chg">Change code</button><button id="fs">Full screen</button></div>
+<div id="bar"><span class="dot" id="dot"></span><span id="st">Not connected</span><button id="chg">Change code</button><button id="fs">Full screen</button><a class="mb" href="./">Menu</a></div>
 <script>
 var firstState=true,code=null,clients=[],gotState=false,lastSent=0,last=null,seen=0,first=true,flashUntil=0,tEnd=0,obs={st:'done',left:0},retry=null,flashT=null;
 try{code=localStorage.getItem('botb-display-code')}catch(e){}

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Battle of the Board</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--k:#0a0a0a;--red:#e3121b;--w:#f2f2f2;--g:#8e8e8e;--line:#2e2e2e;--panel:#131313;--ink:var(--w);--mute:var(--g);--hand:var(--red)}
+body{margin:0;color:var(--w);background:radial-gradient(circle,rgba(255,255,255,.055) 0 1px,transparent 1.6px) 0 0/7px 7px,var(--k)}
+*{box-sizing:border-box}
+html{color-scheme:dark}
+body{font:400 15px/1.5 "Space Mono",ui-monospace,monospace}
+main{max-width:760px;margin:0 auto;padding:16px 16px 40px}
+h1,h2{margin:0}
+h2{font:400 28px/1.1 Anton,Impact,sans-serif;text-transform:uppercase;letter-spacing:.02em;margin:26px 0 10px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.top .ransom{font-size:34px;margin:6px 0 12px}
+.top .bar{font-size:10px;padding:.25em .5em}
+.sub{color:var(--g);margin:6px 0 0}
+.link{font-size:12px;text-transform:uppercase;letter-spacing:.03em;margin-top:10px}
+.link .code{color:var(--k);background:var(--w);font:400 20px/1 Anton,Impact,sans-serif;letter-spacing:.14em;padding:3px 5px 3px 8px;margin:0 8px 0 4px;display:inline-block;transform:rotate(-2deg)}
+button{font:700 14px "Space Mono",monospace;text-transform:uppercase;letter-spacing:.03em;border:2px solid var(--w);background:var(--k);color:var(--w);padding:10px 14px;border-radius:0;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+button:disabled{opacity:.35;cursor:not-allowed}
+.btn{font:700 14px "Space Mono",monospace;text-transform:uppercase;letter-spacing:.03em;border:2px solid var(--line);color:var(--g);padding:10px 14px;text-decoration:none;display:inline-block}
+.b-go{background:var(--w);color:var(--k);border-color:var(--w)}
+.b-fall{background:var(--red);color:var(--k);border-color:var(--red)}
+.b-mull{background:var(--k);color:var(--w);border:2px dashed var(--w)}
+.b-hand{background:var(--k);color:var(--red);border-color:var(--red)}
+.panel{background:var(--panel);border:2px solid var(--line);border-radius:0;padding:16px}
+textarea,input{font:400 16px "Space Mono",monospace;background:var(--k);color:var(--w);border:2px solid var(--line);border-radius:0;padding:8px 10px;width:100%}
+textarea{min-height:170px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row label{flex:1;min-width:150px;color:var(--g);font-size:12px;text-transform:uppercase;display:flex;flex-direction:column;justify-content:space-between;gap:6px;align-self:stretch}
+.now{border-left:10px solid var(--red)}
+.now .sub{color:var(--red);text-transform:uppercase;font-weight:700;font-size:12px;letter-spacing:.05em}
+.now .name{font:400 50px/1 Anton,Impact,sans-serif;text-transform:uppercase;margin:6px 0 8px;overflow-wrap:anywhere}
+.acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.acts button{flex:1;min-width:110px;padding:16px 10px;font-size:16px}
+.banner{border:2px solid var(--red);padding:12px 16px;margin:12px 0;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;text-transform:uppercase;font-size:13px}
+.timer{font:400 30px Anton,Impact,sans-serif;color:var(--red);font-variant-numeric:tabular-nums}
+.obs{border:3px solid var(--red);margin-bottom:12px;text-align:center}
+.obs .sub{color:var(--red);text-transform:uppercase;font-weight:700;font-size:12px;letter-spacing:.05em}
+.timer.big{font-size:84px;line-height:1;margin:8px 0 2px;color:var(--w)}
+.obsst{color:var(--g);text-transform:uppercase;font-size:12px}
+.now.locked{opacity:.55}
+.stats{display:flex;gap:18px;flex-wrap:wrap;margin-top:4px;color:var(--g);text-transform:uppercase;font-size:12px}
+.stats b{color:var(--w);font-size:15px}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:420px;font-size:13px}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
+th{color:var(--g);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+tr.out td{color:#5c5c5c}
+tr.cur td{font-weight:700;background:rgba(227,18,27,.22)}
+.heart{color:var(--red);letter-spacing:2px}
+.now .heart{display:block;font-size:46px;line-height:1;letter-spacing:6px;margin:2px 0 10px}
+.now .heart .last{display:inline-block;transform-origin:50% 60%;animation:lastlife 1.3s ease-in-out infinite}
+@keyframes lastlife{0%,100%{transform:translateX(0) rotate(0);color:var(--red)}8%{transform:translateX(-.08em) rotate(-8deg)}16%{transform:translateX(.08em) rotate(8deg)}24%{transform:translateX(-.06em) rotate(-6deg)}32%{transform:translateX(.06em) rotate(6deg)}40%{transform:translateX(0) rotate(0);color:var(--w)}50%{color:var(--red)}60%{color:var(--w)}70%{color:var(--red)}}
+@keyframes lastlife-calm{0%,100%{color:var(--red)}50%{color:var(--w)}}
+@media (prefers-reduced-motion:reduce){.last{animation:lastlife-calm 1.2s steps(1) infinite!important}}
+
+.tag{display:inline-block;padding:1px 7px;font-size:11px;font-weight:700;text-transform:uppercase;background:var(--w);color:var(--k)}
+.tag.used{background:transparent;color:#5c5c5c;border:1px solid var(--line);text-decoration:line-through}
+ol.draw{columns:2;padding-left:30px;margin:10px 0 0}
+.win{font:400 46px/1 Anton,Impact,sans-serif;color:var(--red);text-transform:uppercase}
+.note{color:var(--red);font-weight:700}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+.modal{background:var(--k);border:3px solid var(--w);border-radius:0;padding:20px;max-width:480px;width:100%;max-height:85vh;overflow:auto}
+.modal h2{margin-top:0;font-size:34px}
+.modal .sub{color:var(--red);text-transform:uppercase;font-size:11px;font-weight:700;letter-spacing:.05em;margin-top:10px}
+.modal ol{padding-left:28px;margin:4px 0 12px}
+a{color:var(--red)}
+
+.ransom{display:inline-flex;flex-direction:column;gap:.06em;font-family:Anton,Impact,sans-serif;font-weight:400;line-height:1;text-transform:uppercase}
+.rl{display:flex;gap:.04em;flex-wrap:nowrap}
+.rl+.rl{margin-left:.7em}
+.rt{display:inline-block;padding:.04em .09em .01em;transform:rotate(var(--r)) translateY(var(--y,0));position:relative;color:var(--k);border:.05em solid var(--k);overflow:hidden}
+.rt.red{background:var(--red)}
+.rt.wht{background:var(--w)}
+.rt.blk{background:var(--k);color:var(--w);border-color:var(--w)}
+.rt::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle,rgba(0,0,0,.6) 30%,transparent 34%) 0 0/.13em .13em;-webkit-mask-image:linear-gradient(130deg,transparent 35%,#000 95%);mask-image:linear-gradient(130deg,transparent 35%,#000 95%)}
+.rt.blk::after{background:radial-gradient(circle,rgba(255,255,255,.35) 30%,transparent 34%) 0 0/.13em .13em}
+.sp{display:inline-block;width:.28em}
+.bar{display:inline-block;line-height:1.35;background:var(--red);color:var(--k);font:700 1em/1.2 "Space Mono",monospace;text-transform:uppercase;letter-spacing:.04em;padding:.2em .6em}
+.bar em{font-style:normal;color:var(--w)}
+
+</style>
+<script src="vendor/jspdf.umd.min.js"></script>
+<script src="vendor/jspdf.plugin.autotable.min.js"></script>
+<script src="vendor/mqtt.min.js"></script>
+</head>
+<body>
+<main id="app"></main>
+<script>
+var KEY='tb2-tracker';
+function init(){return {phase:'setup',round:1,total:7,angle:35,obsLen:60,obs:null,sdRound:0,names:'',players:[],queue:[],sent:[],skipped:[],fell:[],note:'',ev:[],log:[],rOrder:[],sdRes:[]}}
+var S=init(),hist=[],armed=false;
+try{var r=JSON.parse(localStorage.getItem(KEY));if(r&&r.S){S=Object.assign(init(),r.S);hist=r.hist||[]}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({S:S,hist:hist}))}catch(e){}broadcast()}
+function snap(){hist.push(JSON.stringify(S));if(hist.length>80)hist.shift()}
+function P(id){return S.players.filter(function(p){return p.id===id})[0]}
+function active(){return S.players.filter(function(p){return !p.out})}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function fmt(t){return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')}
+function obsLen(){var n=parseInt(S.obsLen);return isNaN(n)?60:Math.max(0,n)}
+function resetTimer(){S.obs=obsLen()>0?{st:'pending',left:obsLen()}:{st:'done',left:0}}
+function obsLeft(){var o=S.obs;if(!o)return 0;return o.st==='running'?Math.max(0,Math.ceil((o.endAt-Date.now())/1000)):o.left}
+function obsBlocked(){return (S.phase==='round'||S.phase==='sd')&&S.obs&&S.obs.st!=='done'}
+function obsAct(a){var o=S.obs;if(!o)return;
+  if(a==='obs-start'&&(o.st==='pending'||o.st==='paused')){o.st='running';o.endAt=Date.now()+o.left*1000}
+  else if(a==='obs-pause'&&o.st==='running'){o.left=obsLeft();o.st='paused';delete o.endAt}
+  else if(a==='obs-reset'){S.obs={st:'pending',left:obsLen()}}
+  else if(a==='obs-skip'){S.obs={st:'done',left:0}}
+}
+setInterval(function(){var o=S.obs;if(!o||o.st!=='running')return;var l=obsLeft();var el=document.getElementById('tm');if(el)el.textContent=fmt(l);if(l<=0){S.obs={st:'done',left:0};save();render()}},250);
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function tag(){return S.phase==='sd'?1000+S.sdRound:S.round}
+function eliminate(p){p.place=active().length;p.out=true;p.outRound=tag()}
+function names(ids){return ids.map(function(id){return P(id).name})}
+function elimThis(){return S.players.filter(function(p){return p.out&&p.outRound===tag()}).sort(function(a,b){return b.place-a.place}).map(function(p){return p.name+' (prize place '+p.place+')'})}
+function uniq(a){return a.filter(function(x,i){return a.indexOf(x)===i})}
+
+function closeRound(){S.log.push({t:S.phase==='sd'?'sd':'main',n:S.phase==='sd'?S.sdRound:S.round,angle:S.angle,order:S.rOrder.slice(),ev:S.ev.slice(),res:(S.phase==='sd'&&S.sdRound===1)?S.sdRes.slice():[]});S.ev=[]}
+async function exportPdf(){
+  var msg=document.getElementById('pdfmsg');
+  function say(t){if(msg)msg.textContent=t}
+  if(!window.jspdf||!window.jspdf.jsPDF){say('The PDF library did not load. Check your connection and reload the page.');return}
+  var dl=null;try{dl=window.claude?await window.claude.use('downloads'):null}catch(e){}
+  var doc=new window.jspdf.jsPDF({unit:'pt',format:'letter'}),W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),M=40,DARK=[28,31,36];
+  doc.setFillColor(28,31,36);doc.rect(0,0,W,112,'F');
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(32);doc.text('BATTLE OF THE BOARD',M,55);
+  doc.setFont('helvetica','normal');doc.setFontSize(13);doc.text('Tension Board 2 Competition  |  Hosted by Rock Revolution',M,78);
+  doc.setFontSize(11);doc.text('Official results  |  '+new Date().toLocaleDateString(),M,97);
+  var win=S.players.filter(function(p){return p.place===1})[0],mainN=0,sdN=0,elimAt={},lives={},alive={},resSet=[];
+  S.log.forEach(function(r){if(r.t==='sd'){sdN++;if(r.n===1)resSet=r.res}else mainN++});
+  S.players.forEach(function(p){lives[p.id]=3;alive[p.id]=1});
+  S.log.forEach(function(r){var lab=r.t==='sd'?'Sudden Death round '+r.n:'Round '+r.n;r.ev.forEach(function(e){if(e[0]==='E')elimAt[e[1]]=lab})});
+  var y=142;
+  doc.setTextColor(28,31,36);doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text('Winner: '+(win?win.name:'-'),M,y);
+  doc.setFont('helvetica','normal');doc.setFontSize(11);doc.text(S.players.length+' climbers  |  '+mainN+' rounds  |  '+sdN+' Sudden Death rounds',M,y+18);
+  y+=48;
+  function head(t){if(y>680){doc.addPage();y=50}doc.setTextColor(28,31,36);doc.setFont('helvetica','bold');doc.setFontSize(15);doc.text(t,M,y);y+=12}
+  function table(cols,rows){doc.autoTable({startY:y,head:[cols],body:rows,margin:{left:M,right:M},styles:{fontSize:10,cellPadding:5},headStyles:{fillColor:DARK,textColor:255}});y=doc.lastAutoTable.finalY+28}
+  head('Order of elimination');
+  var out=S.players.filter(function(p){return p.out}).sort(function(a,b){return b.place-a.place});
+  var rows=out.map(function(p,i){return [i+1,p.name,p.place,elimAt[p.id]||'']});
+  if(win)rows.push(['-',win.name,'1 (Winner)','Last climber standing']);
+  table(['Out #','Climber','Prize place','Eliminated in'],rows);
+  S.log.forEach(function(r){
+    var lab=r.t==='sd'?'Sudden Death round '+r.n+' ('+r.angle+' degrees)':'Round '+r.n;
+    r.res.forEach(function(id){lives[id]=1;alive[id]=1});
+    var info={},k=0,el=0;
+    r.order.forEach(function(id){info[id]={f:0,r:'Did not climb before the round ended'}});
+    r.ev.forEach(function(e){var o=info[e[1]];if(!o)return;
+      if(e[0]==='S'){k++;o.r='Sent (send #'+k+')'}
+      else if(e[0]==='M')o.r='Skip used';
+      else if(e[0]==='F'){o.f++;lives[e[1]]=e[2];o.r='Fell, round ended'}
+      else if(e[0]==='E'){el++;delete alive[e[1]];o.r=(r.t==='main'&&resSet.indexOf(e[1])>-1)?'Eliminated (returned for Sudden Death)':'Eliminated (prize place '+e[2]+')'}
+    });
+    head(lab);
+    var note=k+' sent  |  '+el+' eliminated  |  '+Object.keys(alive).length+' remaining';
+    if(r.res.length)note+='  |  Returned with 1 life: '+r.res.map(function(id){return P(id).name}).join(', ');
+    doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(90,90,90);
+    var ln=doc.splitTextToSize(note,W-2*M);doc.text(ln,M,y+4);y+=ln.length*12+8;
+    table(['Start #','Climber','Falls','Lives left','Result'],r.order.map(function(id,i){var o=info[id];return [i+1,P(id).name,o.f,lives[id],o.r]}));
+  });
+  var n=doc.getNumberOfPages();
+  for(var i=1;i<=n;i++){doc.setPage(i);doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(120,120,120);doc.text('Battle of the Board  |  Rock Revolution',M,H-22);doc.text('Page '+i+' of '+n,W-M,H-22,{align:'right'})}
+  var buf=doc.output('arraybuffer'),fn='Battle-of-the-Board-Results.pdf';
+  if(dl){try{await dl.save({filename:fn,data:buf});say('PDF ready.')}catch(e){say(e&&e.code==='declined'?'Save cancelled.':'Could not save the PDF ('+((e&&e.code)||'error')+').')}return}
+  var blob=new Blob([buf],{type:'application/pdf'}),url=URL.createObjectURL(blob);
+  try{var f=new File([blob],fn,{type:'application/pdf'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'Battle of the Board results'});say('PDF shared.');return}}catch(e){if(e&&e.name==='AbortError'){say('Share cancelled.');return}}
+  if(msg)msg.innerHTML='PDF ready. <a href="'+url+'" download="'+fn+'" style="color:var(--hand);font-weight:600">Save it</a> or <a href="'+url+'" target="_blank" style="color:var(--hand);font-weight:600">open it</a>.';
+}
+function startSD(){
+  closeRound();
+  var res=S.players.filter(function(p){return p.out&&p.outRound===S.round}).map(function(p){return p.id});
+  var order=uniq(S.sent.concat(S.queue,S.skipped,res));S.angle=Math.max(0,Math.round(S.angle/5)*5);
+  S.players.forEach(function(p){if(order.indexOf(p.id)>-1){if(p.out)p.lives=1;p.out=false;p.place=null;p.outRound=null;p.mull=false}});
+  S.phase='sd';S.sdRound=1;S.queue=order;S.rOrder=order.slice();S.sdRes=res;S.sent=[];S.skipped=[];S.fell=[];S.note='';resetTimer();
+  S.popup={t:'Sudden Death begins',sub:'The boulder is at '+S.angle+'°, and every round is 5° steeper. Lives carry over and skips are off.',lists:[{h:'Back from elimination with 1 life',i:names(res)},{h:'Climbing order',i:names(order)}]};
+}
+function nextSD(){
+  var el=elimThis(),d=S.sdRound;
+  closeRound();S.queue=S.sent.filter(function(id){return !P(id).out});S.rOrder=S.queue.slice();S.sent=[];S.angle+=5;S.sdRound++;S.obs={st:'done',left:0};
+  S.popup={t:'Sudden Death round '+d+' complete',sub:'',lists:[{h:'Eliminated this round',i:el},{h:'Climbing order',i:names(S.queue)}]};
+}
+function after(){
+  if(S.phase==='round'&&!S.queue.length){
+    if(active().length<=3||S.round>=S.total)startSD();
+    else{var el=elimThis(),d=S.round;closeRound();S.queue=S.sent.concat(S.skipped).filter(function(id){return !P(id).out});S.rOrder=S.queue.slice();S.sent=[];S.skipped=[];S.round++;resetTimer();S.popup={t:'Round '+d+' complete',sub:'',lists:[{h:'Eliminated this round',i:el},{h:'Climbing order',i:names(S.queue)}]}}
+  }else if(S.phase==='sd'&&!S.queue.length)nextSD();
+}
+function doAct(a){
+  var id=S.queue[0];if(id===undefined||obsBlocked())return;var p=P(id);snap();
+  if(a==='sent'){S.queue.shift();S.sent.push(id);S.ev.push(['S',id])}
+  else if(a==='skip'){if(!p.mull||S.phase!=='round')return;p.mull=false;S.queue.shift();S.skipped.push(id);S.ev.push(['M',id])}
+  else if(a==='fell'){
+    S.queue.shift();p.lives--;S.ev.push(['F',id,Math.max(p.lives,0)]);if(p.lives<=0){eliminate(p);S.ev.push(['E',id,p.place])}else S.queue.push(id);
+  }
+  S.flash={t:Date.now(),k:a==='fell'?(p.out?'out':'fell'):a,name:p.name,lives:Math.max(p.lives,0),place:p.place};
+  if(S.phase==='sd'&&active().length===1){
+    var w=active()[0],el=elimThis();closeRound();w.place=1;S.phase='done';S.queue=[];S.sent=[];
+    S.popup={t:'We have a winner',sub:w.name+' is the last climber standing.',lists:[{h:'Eliminated this round',i:el}]};return;
+  }
+  if(S.phase==='round'&&active().length<=3){startSD();return}
+  after();
+}
+
+var BROKERS=[{u:'wss://public.cloud.shiftr.io',o:{username:'public',password:'public'}},{u:'wss://broker.emqx.io:8084/mqtt'},{u:'wss://broker.hivemq.com:8884/mqtt'}];
+(function(){var b=null;try{b=new URLSearchParams(location.search).get('broker')}catch(e){}if(b)BROKERS=[{u:b}]})();
+var LINK={clients:[],code:null,lastSeen:0};
+function topic(x){return 'rockrevolution/botb/v1/'+LINK.code+'/'+x}
+function linkCode(){var c=null;try{c=localStorage.getItem('botb-code')}catch(e){}if(!c||c.length!==4){var A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';c='';for(var i=0;i<4;i++)c+=A[Math.floor(Math.random()*A.length)];try{localStorage.setItem('botb-code',c)}catch(e){}}return c}
+function upCount(){return LINK.clients.filter(function(c){return c.connected}).length}
+function linkLabel(){if(Date.now()-LINK.lastSeen<15000)return 'Display connected';if(!window.mqtt)return 'Display link unavailable. Check the internet connection and reload.';return upCount()?'Waiting for a display':'Connecting to the message server'}
+function refreshLink(){var el=document.getElementById('linkst');if(el)el.textContent=linkLabel()}
+function payload(){return {type:'state',sentAt:Date.now(),s:{phase:S.phase,round:S.round,total:S.total,angle:S.angle,sdRound:S.sdRound,players:S.players,queue:S.queue,sent:S.sent,skipped:S.skipped,popup:S.popup||null,flash:S.flash||null,names:S.phase==='setup'?S.names.split('\n').map(function(x){return x.trim()}).filter(Boolean):[]},timer:{st:S.obs?S.obs.st:'done',left:obsLeft(),ms:S.obs&&S.obs.st==='running'?Math.max(0,S.obs.endAt-Date.now()):obsLeft()*1000,full:obsLen()}}}
+function pub(c,m){if(c.connected)try{c.publish(topic('state'),m,{retain:true,qos:0})}catch(e){}}
+function broadcast(){if(!LINK.code)return;var m=JSON.stringify(payload());LINK.clients.forEach(function(c){pub(c,m)})}
+function startLink(){
+  if(!window.mqtt){refreshLink();return}
+  BROKERS.forEach(function(b){
+    var o=Object.assign({clientId:'botbT'+Math.random().toString(16).slice(2,10),reconnectPeriod:3000,connectTimeout:8000,clean:true,keepalive:30},b.o||{});
+    var c;try{c=mqtt.connect(b.u,o)}catch(e){return}
+    LINK.clients.push(c);
+    c.on('connect',function(){c.subscribe(topic('hello'));pub(c,JSON.stringify(payload()));refreshLink()});
+    c.on('message',function(t,msg){LINK.lastSeen=Date.now();refreshLink();if(String(msg)==='join')pub(c,JSON.stringify(payload()))});
+    c.on('close',refreshLink);c.on('offline',refreshLink);c.on('error',function(){});
+  });
+  setInterval(refreshLink,5000);
+}
+function ransom(lines){var rot=[-4,3,-2,5,-3,2,-5,4,-1,3,-3,2],yy=[0,-.04,.03,-.02,.05,0,-.05,.02],k=0;return '<span class="ransom" aria-label="'+lines.map(function(l){return l.w}).join(' ')+'">'+lines.map(function(l){return '<span class="rl" aria-hidden="true">'+l.w.split('').map(function(ch){if(ch===' ')return '<span class="sp"></span>';var i=k++;return '<span class="rt '+l.c+'" style="--r:'+rot[i%rot.length]+'deg;--y:'+yy[i%yy.length]+'em">'+esc(ch)+'</span>'}).join('')+'</span>'}).join('')+'</span>'}
+function brandTitle(){return ransom([{w:'Battle of',c:'red'},{w:'the Board',c:'wht'}])}
+var SUBBAR='';
+function nameCount(){return S.names.split('\n').filter(function(x){return x.trim()}).length}
+function count(){var n=S.names.split('\n').filter(function(x){return x.trim()}).length;return n+(n===1?' participant':' participants')}
+function syncPlayers(){
+  var n=S.names.split('\n').map(function(x){return x.trim()}).filter(Boolean),order;
+  if(S.randomized){var pool=n.slice();order=[];S.players.forEach(function(p){var i=pool.indexOf(p.name);if(i>-1){order.push(p.name);pool.splice(i,1)}});order=order.concat(pool)}
+  else order=n;
+  S.players=order.map(function(nm,i){return {id:i,name:nm,lives:3,mull:true,out:false,place:null,outRound:null}});
+  S.queue=S.players.map(function(p){return p.id});S.rOrder=S.queue.slice();S.ev=[];S.log=[];
+}
+function orderPanel(){
+  if(!S.players.length)return '';
+  return '<h2>Climbing order ('+S.players.length+')</h2><div class="panel"><ol class="draw">'+S.players.map(function(p){return '<li>'+esc(p.name)+'</li>'}).join('')+'</ol><p class="sub">'+(S.randomized?'Randomized. New names are added to the end.':'In the order typed above. Tap Randomize to shuffle.')+'</p></div>';
+}
+function drawNames(noShuffle){
+  var n=S.names.split('\n').map(function(x){return x.trim()}).filter(Boolean);
+  S.players=(noShuffle?n:shuffle(n)).map(function(nm,i){return {id:i,name:nm,lives:3,mull:true,out:false,place:null,outRound:null}});
+  S.queue=S.players.map(function(p){return p.id});S.rOrder=S.queue.slice();S.ev=[];S.log=[];
+}
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-a]');if(!b)return;var a=b.getAttribute('data-a');
+  if(a==='draw'){drawNames();S.randomized=true}
+  else if(a==='start'){syncPlayers();if(S.players.length<2)return;snap();S.phase='round';S.round=1;resetTimer()}
+  else if(a==='sent'||a==='fell'||a==='skip')doAct(a);
+  else if(a==='sd'){snap();startSD()}
+  else if(a==='undo'){if(hist.length)S=Object.assign(init(),JSON.parse(hist.pop()))}
+  else if(a==='pdf'){exportPdf();return}
+  else if(a==='dismiss')S.popup=null;
+  else if(a.indexOf('obs-')===0){obsAct(a)}
+  else if(a==='reset'){if(!armed){armed=true;render();return}var n=S.names;S=init();S.names=n;hist=[];resetTimer()}
+  if(a!=='reset')armed=false;
+  save();render();
+});
+document.addEventListener('input',function(e){
+  var id=e.target.id;
+  if(id==='names'){S.names=e.target.value;var c=document.getElementById('cnt');if(c)c.textContent=count();var sb=document.getElementById('startbtn');if(sb)sb.disabled=nameCount()<2;syncPlayers();var op=document.getElementById('orderpanel');if(op)op.innerHTML=orderPanel()}
+  else if(id==='total')S.total=Math.max(1,parseInt(e.target.value)||1);
+  else if(id==='angle')S.angle=parseInt(e.target.value)||35;
+  else if(id==='obslen')S.obsLen=Math.max(0,parseInt(e.target.value)||0);
+  save();
+});
+
+document.addEventListener('change',function(e){if(e.target.id==='angle'){S.angle=Math.max(0,Math.round((parseInt(e.target.value)||35)/5)*5);e.target.value=S.angle;save()}});
+function hearts(p){var m=3;return '<span class="heart" aria-label="'+p.lives+' lives"><span class="'+(p.lives===1&&!p.out?'last':'')+'">'+'♥'.repeat(Math.max(p.lives,0))+'</span>'+'♡'.repeat(Math.max(m-p.lives,0))+'</span>'}
+function status(p){
+  if(p.out)return 'Out, prize place '+p.place;
+  if(S.phase==='done'&&p.place===1)return 'Winner';
+  var i=S.queue.indexOf(p.id);
+  if(i===0)return 'Climbing now';if(i>0)return 'In line ('+i+' ahead)';
+  if(S.sent.indexOf(p.id)>-1)return 'Sent';if(S.skipped.indexOf(p.id)>-1)return 'Used skip';
+  if(S.fell.indexOf(p.id)>-1)return 'Fell';return 'Waiting';
+}
+function roster(){
+  var act=uniq(S.queue.concat(S.sent,S.skipped,S.fell)).map(P).filter(Boolean);
+  var out=S.players.filter(function(p){return p.out}).sort(function(a,b){return a.place-b.place});
+  var rows=S.phase==='done'?S.players.slice().sort(function(a,b){return a.place-b.place}):act.concat(out);
+  var h='<div class="scroll"><table><thead><tr><th>Name</th><th>Lives</th><th>Skip</th><th>Status</th></tr></thead><tbody>';
+  rows.forEach(function(p){
+    var m=S.phase==='sd'||S.phase==='done'?'<span class="tag used">n/a</span>':(p.mull?'<span class="tag">Available</span>':'<span class="tag used">Used</span>');
+    h+='<tr class="'+(p.out?'out':(S.queue[0]===p.id?'cur':''))+'"><td>'+esc(p.name)+'</td><td>'+hearts(p)+'</td><td>'+m+'</td><td>'+status(p)+'</td></tr>';
+  });
+  return h+'</tbody></table></div>';
+}
+function head(){
+  return '<div class="top"><div><h1>'+brandTitle()+'</h1>'+SUBBAR+'<p class="sub link">Display code <b class="code">'+esc(LINK.code||'')+'</b> <span id="linkst">'+linkLabel()+'</span></p></div><div class="row"><a class="btn" href="./">Menu</a><button data-a="undo"'+(hist.length?'':' disabled')+'>Undo</button><button data-a="reset">'+(armed?'Confirm reset':'Reset')+'</button></div></div>';
+}
+function modal(){
+  var p=S.popup,h='<div class="ov"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt"><h2 id="mt">'+esc(p.t)+'</h2>'+(p.sub?'<p>'+esc(p.sub)+'</p>':'');
+  p.lists.forEach(function(l){if(l.i.length)h+='<div class="sub">'+l.h+'</div><ol>'+l.i.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ol>'});
+  return h+'<div class="acts"><button id="dm" class="b-go" data-a="dismiss">Continue</button></div></div></div>';
+}
+function render(){
+  var h=head(),n=active().length;
+  if(S.phase==='setup'){
+    h+='<h2>Set up the competition</h2><div class="panel"><label for="names" class="sub">One competitor per line</label><textarea id="names" placeholder="Alex&#10;Sam&#10;Jordan">'+esc(S.names)+'</textarea><p class="sub" id="cnt" style="margin:8px 0 0;font-weight:600">'+count()+'</p>'+
+    '<div class="row" style="margin-top:12px"><label>Number of boulders<input id="total" type="number" min="1" value="'+S.total+'"></label><label>Sudden Death angle (°)<input id="angle" type="number" step="5" min="0" value="'+S.angle+'"></label><label>Observation time (sec)<input id="obslen" type="number" step="15" min="0" value="'+obsLen()+'"></label></div>'+
+    '<div class="acts"><button class="b-hand" data-a="draw">Randomize</button><button class="b-go" id="startbtn" data-a="start"'+(nameCount()>=2?'':' disabled')+'>Start round 1</button></div>'+'</div>';
+    if(!S.players.length&&nameCount())syncPlayers();
+    h+='<div id="orderpanel">'+orderPanel()+'</div>';
+  }else{
+    var cur=P(S.queue[0]),sd=S.phase==='sd';
+    var title=S.phase==='done'?'Final standings':(sd?'Sudden Death, round '+S.sdRound+' at '+S.angle+'°':'Round '+S.round+' of '+S.total);
+    h+='<h2>'+title+'</h2><div class="stats"><span><b>'+n+'</b> still alive</span><span><b>'+S.sent.length+'</b> sent</span><span><b>'+S.queue.length+'</b> still to climb</span></div>';
+    if(S.note)h+='<p class="note">'+esc(S.note)+'</p>';
+    if(S.phase==='round'&&n<=3)h+='<div class="banner"><span><b>Only '+n+' climbers left.</b> Move straight to Sudden Death.</span><button class="b-mull" data-a="sd">Start Sudden Death</button></div>';
+    if(S.phase==='done'){var w=S.players.filter(function(p){return p.place===1})[0];h+='<div class="panel now"><div class="sub">Winner</div><div class="win">'+esc(w?w.name:'')+'</div></div><div class="acts"><button class="b-hand" data-a="pdf">Export results PDF</button></div><p class="sub" id="pdfmsg"></p>'}
+    else if(cur){
+      var ob=obsBlocked();
+      if(ob){var o=S.obs,l=obsLeft();
+        h+='<div class="panel obs"><div class="sub">Observation, '+(sd?'Sudden Death at '+S.angle+'°':'round '+S.round)+'</div><div class="timer big" id="tm">'+fmt(l)+'</div><div class="obsst">'+(o.st==='pending'?'Not started':o.st==='paused'?'Paused':'Climbers are observing')+'</div><div class="acts">'+
+        (o.st==='running'?'<button class="b-go" data-a="obs-pause">Pause</button>':'<button class="b-go" data-a="obs-start">'+(o.st==='paused'?'Resume':'Start observation')+'</button>')+
+        '<button data-a="obs-reset"'+(o.st==='pending'&&l===obsLen()?' disabled':'')+'>Reset</button><button class="b-mull" data-a="obs-skip">Skip</button></div></div>';
+      }
+      h+='<div class="panel now'+(ob?' locked':'')+'"><div class="sub">'+(ob?'Up first, after observation':sd?'Up now':'Up now, begin immediately')+'</div><div class="name">'+esc(cur.name)+'</div><div>'+hearts(cur)+(sd?'':'Skip '+(cur.mull?'available':'used'))+'</div>'+
+      '<div class="acts"><button class="b-go" data-a="sent"'+(ob?' disabled':'')+'>Sent it</button><button class="b-fall" data-a="fell"'+(ob?' disabled':'')+'>'+'Fell, lose a life'+'</button>'+(sd?'':'<button class="b-mull" data-a="skip"'+(cur.mull&&!ob?'':' disabled')+'>Use skip</button>')+'</div>'+(ob?'<p class="sub">Finish or skip the observation to start climbing.</p>':'')+'</div>';
+      var nx=S.queue.slice(1,4).map(function(id){return esc(P(id).name)});
+      if(nx.length)h+='<p class="sub">Next: '+nx.join(', ')+'</p>';
+      if(!ob&&obsLen()>0)h+='<div class="row" style="margin-top:8px"><button data-a="obs-reset">Restart observation</button></div>';
+    }
+    h+='<h2>Climbers</h2><div class="panel">'+roster()+'</div>';
+  }
+  if(S.popup)h+=modal();
+  document.getElementById('app').innerHTML=h;
+  var dm=document.getElementById('dm');if(dm)dm.focus();
+}
+LINK.code=linkCode();
+render();
+startLink();
+</script>
+</body>
+</html>
