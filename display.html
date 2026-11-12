@@ -80,7 +80,12 @@ footer .chip{border:2px solid var(--w);color:var(--w);padding:.1em .6em}
 #flash.out .fs{color:var(--red)}
 #flash.skip{background:radial-gradient(circle,rgba(0,0,0,.1) 0 1px,transparent 1.6px) 0 0/7px 7px,#ffb43c;color:#2b1a02}
 /* round popup */
-#pop{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.84);z-index:20;padding:4vh 4vw}
+#pop{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:radial-gradient(circle,rgba(255,255,255,.055) 0 1px,transparent 1.6px) 0 0/7px 7px,var(--k);z-index:20;padding:4vh 4vw}
+#pop h1{margin-bottom:3.4vh!important}
+#card{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4vh;z-index:25;padding:4vw;background:radial-gradient(circle,rgba(227,18,27,.22) 0 1.2px,transparent 1.8px) 0 0/7px 7px,var(--k)}
+#card.on{display:flex;opacity:1}
+#card.on.bye{opacity:0;transition:opacity .6s ease-in}
+#card .cs{font-size:clamp(18px,2.6vw,50px);letter-spacing:.06em;color:var(--w)}
 #pop.on{display:flex}
 #pop .box{background:var(--k);border:4px solid var(--w);box-shadow:1.2vw 1.2vw 0 var(--red);padding:4vh 4vw;max-height:90vh;overflow:hidden;width:min(1400px,90vw)}
 #pop h1{margin:0;font:400 clamp(44px,6.5vw,128px)/.95 Anton,Impact,sans-serif}
@@ -126,6 +131,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--red);outline-of
 <body>
 <main id="stage"></main>
 <div id="pop" role="dialog" aria-live="polite"></div>
+<div id="card" aria-live="polite"></div>
 <div id="flash" aria-live="assertive"></div>
 <div id="connect">
   <form id="cf">
@@ -138,7 +144,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--red);outline-of
 </div>
 <div id="bar"><span class="dot" id="dot"></span><span id="st">Not connected</span><button id="chg">Change code</button><button id="fs">Full screen</button></div>
 <script>
-var code=null,clients=[],gotState=false,lastSent=0,last=null,seen=0,first=true,flashUntil=0,tEnd=0,obs={st:'done',left:0},retry=null,flashT=null;
+var firstState=true,code=null,clients=[],gotState=false,lastSent=0,last=null,seen=0,first=true,flashUntil=0,tEnd=0,obs={st:'done',left:0},retry=null,flashT=null;
 try{code=localStorage.getItem('botb-display-code')}catch(e){}
 function $(id){return document.getElementById(id)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
@@ -181,6 +187,8 @@ function onData(m){
   first=false;
   obs=m.timer&&m.timer.st?m.timer:{st:'done',left:0};
   tEnd=obs.st==='running'?m.sentAt+obs.left*1000:0;
+  if(last&&!firstState&&(s.phase==='round'||s.phase==='sd')&&((last.popup&&!s.popup)||(last.phase==='setup'&&s.phase==='round')))showCard(s);
+  firstState=false;
   last=s;render();upd();
 }
 function showConnect(){$('ch').innerHTML=brandTitle();$('connect').className='on';$('ci').value=code||'';setTimeout(function(){$('ci').focus()},50)}
@@ -256,10 +264,24 @@ function render(){
   st.innerHTML=h;tick();
   var pop=$('pop');
   if(s.popup&&Date.now()>=flashUntil){
-    var b='<div class="box"><h1>'+esc(s.popup.t)+'</h1><p>'+esc(s.popup.sub)+'</p><div class="cols">';
+    var b='<div class="box"><h1>'+esc(s.popup.t)+'</h1>'+(s.popup.sub?'<p>'+esc(s.popup.sub)+'</p>':'')+'<div class="cols">';
     s.popup.lists.forEach(function(l){if(l.i.length)b+='<div><h3>'+esc(l.h)+'</h3><ol>'+l.i.map(function(x){var m=/^(.*) \(prize place (\d+)\)$/.exec(String(x));return '<li>'+(m?esc(m[1])+'<span class="pp">Prize place '+m[2]+'</span>':esc(x))+'</li>'}).join('')+'</ol></div>'});
     pop.innerHTML=b+'</div></div>';pop.className='on';
   }else pop.className='';
+}
+var cardT=null,cardB=null;
+function showCard(s){
+  var el=$('card'),big,sub,len;
+  if(s.phase==='sd'){big=s.sdRound===1?'Sudden Death':'Round '+s.sdRound;sub=(s.sdRound===1?'':'Sudden Death, ')+'Board at '+s.angle+'°'}
+  else{big='Round '+s.round;sub=s.round===s.total?'Final boulder':'Boulder '+s.round+' of '+s.total}
+  len=big.length;
+  var words=big.split(' ');
+  el.className='';void el.offsetWidth;
+  el.innerHTML='<div style="font-size:'+Math.min(17,80/(Math.max.apply(null,words.map(function(w){return w.length}))*0.74)).toFixed(2)+'vw">'+ransom(words.length>1&&len>8?[{w:words[0],c:'red'},{w:words.slice(1).join(' '),c:'wht'}]:[{w:big,c:'red'}])+'</div><div class="cs">'+esc(sub)+'</div>';
+  el.className='on';
+  clearTimeout(cardT);clearTimeout(cardB);
+  cardB=setTimeout(function(){el.classList.add('bye')},3000);
+  cardT=setTimeout(function(){el.className=''},3600);
 }
 function mmss(l){return Math.floor(l/60)+':'+String(l%60).padStart(2,'0')}
 function tick(){var o=$('otm');if(o){var l=obs.st==='running'?Math.max(0,Math.ceil((tEnd-Date.now())/1000)):obs.left;o.textContent=mmss(l);o.className='otm'+(obs.st==='paused'?' paused':obs.st==='running'&&l<=10?' hot':'');var os=$('ost');if(os)os.textContent=obs.st==='pending'?'Observation starts soon':obs.st==='paused'?'Observation paused':'Observation time'}
