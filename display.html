@@ -34,6 +34,7 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:2vw
 .pill{padding:.35em .8em;font-size:clamp(12px,1.35vw,24px);background:var(--w);color:var(--k);transform:rotate(-1.5deg)}
 .pill.off{background:transparent;color:#5c5c5c;border:2px solid #333;text-decoration:line-through;transform:none}
 .timer{font:400 clamp(30px,4vw,76px)/1 Anton,Impact,sans-serif;font-variant-numeric:tabular-nums;color:var(--red)}
+.timer.idle{color:var(--g)}
 .side{background:var(--panel);border:3px solid var(--line);padding:3vh 2vw;min-height:0;overflow:hidden}
 .side h2{margin:0 0 1.6vh;display:inline-block;background:var(--w);color:var(--k);padding:.25em .7em;font-size:clamp(12px,1.25vw,22px);letter-spacing:.06em;font-weight:700}
 .next{list-style:none;margin:0;padding:0}
@@ -132,7 +133,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--red);outline-of
 </div>
 <div id="bar"><span class="dot" id="dot"></span><span id="st">Not connected</span><button id="chg">Change code</button><button id="fs">Full screen</button></div>
 <script>
-var code=null,clients=[],gotState=false,lastSent=0,last=null,seen=0,first=true,flashUntil=0,tEnd=0,retry=null,flashT=null;
+var code=null,clients=[],gotState=false,lastSent=0,last=null,seen=0,first=true,flashUntil=0,tEnd=0,obs={st:'done',left:0},retry=null,flashT=null;
 try{code=localStorage.getItem('botb-display-code')}catch(e){}
 function $(id){return document.getElementById(id)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
@@ -173,7 +174,8 @@ function onData(m){
   var s=m.s;
   if(s.flash&&s.flash.t>seen){if(!first)doFlash(s.flash);seen=s.flash.t}
   first=false;
-  tEnd=m.timer&&m.timer.run?m.sentAt+m.timer.left*1000:0;
+  obs=m.timer&&m.timer.st?m.timer:{st:'done',left:0};
+  tEnd=obs.st==='running'?m.sentAt+obs.left*1000:0;
   last=s;render();upd();
 }
 function showConnect(){$('ch').innerHTML=brandTitle();$('connect').className='on';$('ci').value=code||'';setTimeout(function(){$('ci').focus()},50)}
@@ -229,7 +231,7 @@ function render(){
     var cur=P(s.queue[0]),sd=s.phase==='sd';
     h+='<div class="main"><section class="now">';
     if(cur){
-      h+='<div class="lab">Now climbing</div><div class="who">'+esc(cur.name)+'</div><div class="hearts" aria-label="'+cur.lives+' lives">'+hearts(cur.lives)+'</div><div class="meta">';
+      h+='<div class="lab">'+(obs.st!=='done'?'Up first':'Now climbing')+'</div><div class="who">'+esc(cur.name)+'</div><div class="hearts" aria-label="'+cur.lives+' lives">'+hearts(cur.lives)+'</div><div class="meta">';
       if(!sd)h+='<span class="pill'+(cur.mull?'':' off')+'">'+(cur.mull?'Skip available':'Skip used')+'</span>';
       h+='<span class="timer" id="tm"></span></div>';
     }else h+='<div class="lab">Between turns</div><div class="who">Stand by</div>';
@@ -250,7 +252,8 @@ function render(){
     pop.innerHTML=b+'</div></div>';pop.className='on';
   }else pop.className='';
 }
-function tick(){var el=$('tm');if(!el)return;var l=Math.ceil((tEnd-Date.now())/1000);el.textContent=tEnd&&l>0?'Observe '+Math.floor(l/60)+':'+String(l%60).padStart(2,'0'):''}
+function mmss(l){return Math.floor(l/60)+':'+String(l%60).padStart(2,'0')}
+function tick(){var el=$('tm');if(!el)return;var t='';if(obs.st==='running'){var l=Math.ceil((tEnd-Date.now())/1000);if(l>0)t='Observe '+mmss(l)}else if(obs.st==='paused')t='Paused '+mmss(obs.left);else if(obs.st==='pending')t='Observe '+mmss(obs.left);el.textContent=t;el.className='timer'+(obs.st==='running'?'':' idle')}
 setInterval(tick,250);
 
 render();
