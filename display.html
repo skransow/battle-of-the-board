@@ -244,7 +244,7 @@ function render(){
       h+='</div>';
     }else h+='<div class="lab">Between turns</div><div class="who">Stand by</div>';
     var off=observing?0:1;
-    h+='</section><section class="side"><h2>'+(observing?'On deck':'Up next')+'</h2><ul class="next">';
+    h+='</section><section class="side"><h2>'+'Up next'+'</h2><ul class="next">';
     var nx=s.queue.slice(off,off+8);
     if(!nx.length)h+='<li><span class="nm" style="color:var(--mute)">No one else in line</span></li>';
     nx.forEach(function(id,i){var p=P(id);h+='<li><span class="n">'+(i+1)+'</span><span class="nm">'+esc(p.name)+'</span><span class="h">'+'♥'.repeat(Math.max(p.lives,0))+'</span></li>'});

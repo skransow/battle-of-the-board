@@ -188,7 +188,7 @@ function nextSD(){
 function after(){
   if(S.phase==='round'&&!S.queue.length){
     if(active().length<=3||S.round>=S.total)startSD();
-    else{var el=elimThis(),d=S.round;closeRound();S.queue=S.sent.concat(S.skipped).filter(function(id){return !P(id).out});S.rOrder=S.queue.slice();S.sent=[];S.skipped=[];S.round++;resetTimer();S.popup={t:'Round '+d+' complete',sub:'Round '+S.round+' is next. Start the observation time when the climbers are ready.',lists:[{h:'Eliminated this round',i:el},{h:'Climbing order',i:names(S.queue)}]}}
+    else{var el=elimThis(),d=S.round;closeRound();S.queue=S.sent.concat(S.skipped).filter(function(id){return !P(id).out});S.rOrder=S.queue.slice();S.sent=[];S.skipped=[];S.round++;resetTimer();S.popup={t:'Round '+d+' complete',sub:'Round '+S.round+' is next.',lists:[{h:'Eliminated this round',i:el},{h:'Climbing order',i:names(S.queue)}]}}
   }else if(S.phase==='sd'&&!S.queue.length)nextSD();
 }
 function doAct(a){
