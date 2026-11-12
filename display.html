@@ -100,6 +100,9 @@ footer .chip{border:2px solid var(--w);color:var(--w);padding:.1em .6em}
 #pop p{font-size:clamp(12px,1.5vw,28px);color:var(--g);margin:2vh 0 3.4vh;letter-spacing:.02em}
 #pop .cols{display:flex;gap:4vw}
 #pop .cols>div{flex:1;min-width:0}
+#pop ul.notes{list-style:none;margin:0 0 3.4vh;padding:0;font-size:clamp(15px,1.75vw,32px);line-height:1.35}
+#pop ul.notes li{padding:.5vh 0 .5vh 1.4em;position:relative}
+#pop ul.notes li::before{content:'';position:absolute;left:0;top:.55em;width:.55em;height:.55em;background:var(--red)}
 #pop h3{margin:0 0 1.6vh;display:inline-block;background:var(--red);color:var(--k);padding:.25em .7em;font-size:clamp(12px,1.35vw,24px);letter-spacing:.05em}
 #pop ol{margin:0;padding-left:2.2em;columns:2;column-gap:2vw;font-size:clamp(13px,1.5vw,28px)}
 #pop ol li{break-inside:avoid;padding:.2vh 0 .8vh}
@@ -290,7 +293,7 @@ function render(){
   st.innerHTML=h;tick();
   var pop=$('pop');
   if(s.popup){
-    var b='<div class="box"><h1>'+esc(s.popup.t)+'</h1>'+(s.popup.sub?'<p>'+esc(s.popup.sub)+'</p>':'')+'<div class="cols">';
+    var b='<div class="box"><h1>'+esc(s.popup.t)+'</h1>'+(s.popup.sub?'<p>'+esc(s.popup.sub)+'</p>':'')+(s.popup.notes&&s.popup.notes.length?'<ul class="notes">'+s.popup.notes.map(function(n){return '<li>'+esc(n)+'</li>'}).join('')+'</ul>':'')+'<div class="cols">';
     s.popup.lists.forEach(function(l){if(l.i.length)b+='<div><h3>'+esc(l.h)+'</h3><ol>'+l.i.map(function(x){var m=/^(.*) \(prize place (\d+)\)$/.exec(String(x));return '<li>'+(m?esc(m[1])+'<span class="pp">Prize place '+m[2]+'</span>':esc(x))+'</li>'}).join('')+'</ol></div>'});
     pop.innerHTML=b+'</div></div>';pop.className='on';
   }else pop.className='';

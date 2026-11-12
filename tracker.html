@@ -71,6 +71,8 @@ ol.draw{columns:2;padding-left:30px;margin:10px 0 0}
 .modal h2{margin-top:0;font-size:34px}
 .modal .sub{color:var(--red);text-transform:uppercase;font-size:11px;font-weight:700;letter-spacing:.05em;margin-top:10px}
 .modal ol{padding-left:28px;margin:4px 0 12px}
+.modal ul.notes{margin:10px 0 14px;padding-left:20px}
+.modal ul.notes li{margin:6px 0;line-height:1.4}
 .modal ol li{padding:2px 0 6px}
 .modal ol li .pp{display:block;font-size:11px;color:var(--red);text-transform:uppercase;letter-spacing:.04em;font-weight:700}
 a{color:var(--red)}
@@ -215,6 +217,12 @@ function doAct(a){
     var w=active()[0],el=elimThis();closeRound();w.place=1;S.phase='done';S.queue=[];S.sent=[];
     S.popup={t:'We have a winner',sub:w.name+' is the last climber standing.',lists:[{h:'Eliminated this round',i:el}]};return;
   }
+  if(S.phase==='round'&&S.queue.length&&active().length<=3&&S.final3!==S.round){
+    S.final3=S.round;
+    S.popup={t:'Final 3',sub:'Only 3 climbers are left. This boulder will be finished, then Sudden Death begins.',
+      notes:['Send this boulder and you take a bonus life into Sudden Death.','Use a skip and you go in with the lives you have, no bonus.','If fewer than 3 climbers survive this boulder, everyone it eliminated comes back with 1 life.'],
+      lists:[{h:'Still in',i:active().map(function(p){return p.name+' ('+p.lives+(p.lives===1?' life':' lives')+')'})}]};
+  }
   after();
 }
 
@@ -309,8 +317,9 @@ function roster(){
 function head(){
   return '<div class="top"><div><h1>'+brandTitle()+'</h1>'+SUBBAR+'<p class="sub link">Display code <b class="code">'+esc(LINK.code||'')+'</b> <span id="linkst">'+linkLabel()+'</span></p></div><div class="row"><a class="btn" href="./">Menu</a><button data-a="undo"'+(hist.length?'':' disabled')+'>Undo</button><button data-a="reset">'+(armed?'Confirm reset':'Reset')+'</button></div></div>';
 }
+function notesHtml(p){return p.notes&&p.notes.length?'<ul class="notes">'+p.notes.map(function(n){return '<li>'+esc(n)+'</li>'}).join('')+'</ul>':''}
 function modal(){
-  var p=S.popup,h='<div class="ov"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt"><h2 id="mt">'+esc(p.t)+'</h2>'+(p.sub?'<p>'+esc(p.sub)+'</p>':'');
+  var p=S.popup,h='<div class="ov"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt"><h2 id="mt">'+esc(p.t)+'</h2>'+(p.sub?'<p>'+esc(p.sub)+'</p>':'')+notesHtml(p);
   p.lists.forEach(function(l){if(l.i.length)h+='<div class="sub">'+l.h+'</div><ol>'+l.i.map(function(x){var m=/^(.*) \(prize place (\d+)\)$/.exec(String(x));return '<li>'+(m?esc(m[1])+'<span class="pp">Prize place '+m[2]+'</span>':esc(x))+'</li>'}).join('')+'</ol>'});
   return h+'<div class="acts"><button id="dm" class="b-go" data-a="dismiss">Continue</button></div></div></div>';
 }
