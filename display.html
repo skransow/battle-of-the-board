@@ -73,8 +73,11 @@ footer .chip{border:2px solid var(--w);color:var(--w);padding:.1em .6em}
 #flash{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;z-index:30;padding:4vw}
 #flash.on{display:flex;opacity:1}
 #flash.on.bye{opacity:0;transition:opacity .5s ease-in}
-#flash .word .ransom{font-size:1em}
-#flash .word .rl{justify-content:center}
+.fw{display:inline-flex;flex-direction:column;align-items:flex-start;line-height:1}
+.fl{display:flex;align-items:flex-start}
+.fl+.fl{margin-left:.8em;margin-top:-.16em}
+.g{display:block;height:1em;flex:none;background:currentColor;-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
+.fsp{display:block;width:.25em;flex:none}
 #flash .fn{font:400 clamp(40px,6.5vw,130px)/1 Anton,Impact,sans-serif;margin-bottom:4vh;overflow-wrap:anywhere}
 #flash .fs{font-size:clamp(16px,2.2vw,42px);margin-top:4vh;letter-spacing:.04em}
 #flash.sent{background:radial-gradient(circle,rgba(0,0,0,.1) 0 1px,transparent 1.6px) 0 0/7px 7px,#2fcf8a;color:#062316}
@@ -209,15 +212,23 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')barOpen(fals
 $('fs').addEventListener('click',function(){var d=document.documentElement;if(document.fullscreenElement)document.exitFullscreen();else if(d.requestFullscreen)d.requestFullscreen()});
 
 /* ---------- flash ---------- */
+var GM={"A":[0.6571,0.4976,0.0897],"B":[0.6378,0.4806,0.0897],"C":[0.6442,0.4863,0.0897],"D":[0.6763,0.519,0.0897],"E":[0.5994,0.519,0.0897],"F":[0.6538,0.4964,0.0897],"G":[0.6506,0.4947,0.0897],"H":[0.6955,0.537,0.0897],"I":[0.4423,0.2863,0.0897],"J":[0.6186,0.462,0.0897],"K":[0.6827,0.5257,0.0897],"L":[0.7019,0.5438,0.0897],"M":[0.9423,0.7861,0.0897],"N":[0.7115,0.5544,0.0897],"O":[0.6891,0.5314,0.0897],"P":[0.6026,0.444,0.0897],"Q":[0.8045,0.648,0.0897],"R":[0.6763,0.5178,0.0897],"S":[0.6346,0.4767,0.0897],"T":[0.5801,0.4255,0.0897],"U":[0.6603,0.5014,0.0929],"V":[0.6346,0.4784,0.0897],"W":[0.8846,0.728,0.0897],"X":[0.7404,0.5832,0.0897],"Y":[0.6122,0.4536,0.0897],"Z":[0.6474,0.5133,0.0673]};
+function gname(ch){return ch}
+function lineAdv(t){var a=0;t.split('').forEach(function(ch){a+=ch===' '?.25:(GM[ch]?GM[ch][1]:.5)});return a}
+function fword(lines){return '<span class="fw" role="img" aria-label="'+esc(lines.map(function(l){return l.w}).join(' '))+'">'+lines.map(function(l){return '<span class="fl" style="color:'+l.c+'">'+l.w.toUpperCase().split('').map(function(ch){if(ch===' ')return '<span class="fsp"></span>';var m=GM[ch];if(!m)return '';var u='url(glyphs/'+gname(ch)+'.png)';return '<span class="g" style="width:'+m[0]+'em;margin-left:'+(-m[2]).toFixed(3)+'em;margin-right:'+(m[1]-m[0]+m[2]).toFixed(3)+'em;-webkit-mask-image:'+u+';mask-image:'+u+'"></span>'}).join('')+'</span>'}).join('')+'</span>'}
+function fsize(lines,maxVw,maxVh){var w=Math.max.apply(null,lines.map(function(l){return lineAdv(l.w.toUpperCase())+(l===lines[1]?.8:0)}));return 'min('+(Math.min(maxVw,86/w)).toFixed(2)+'vw,'+(maxVh/lines.length).toFixed(1)+'vh)'}
+var NUMW=['Zero','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'],TENW=['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+function numWord(n){if(n<20)return NUMW[n];if(n<100)return TENW[Math.floor(n/10)]+(n%10?' '+NUMW[n%10]:'');return String(n)}
+Object.keys(GM).forEach(function(ch){var i=new Image();i.src='glyphs/'+gname(ch)+'.png'});
 function doFlash(f){
   var el=$('flash'),word,sub='';
-  if(f.k==='sent'){word='SENT!';sub='Stand by for the next boulder'}
+  if(f.k==='sent'){word='SENT';sub='Stand by for the next boulder'}
   else if(f.k==='skip'){word='SKIP';sub='Live to climb another day'}
   else if(f.k==='out'){word='ELIMINATED'}
   else{word='FELL';sub=f.lives+(f.lives===1?' life':' lives')+' left, back of the line'}
   el.className='';void el.offsetWidth;
-  var tc=f.k==='out'?'red':f.k==='fell'?'wht':'blk';
-  el.innerHTML='<div class="fn">'+esc(f.name)+'</div><div class="word" style="font-size:'+Math.min(15,84/(word.length*0.74)).toFixed(2)+'vw">'+ransom([{w:word,c:tc}])+'</div>'+(sub?'<div class="fs">'+esc(sub)+'</div>':'');
+  var tc=f.k==='out'?'var(--red)':f.k==='fell'?'var(--w)':'var(--k)',wl=[{w:word,c:tc}];
+  el.innerHTML='<div class="fn">'+esc(f.name)+'</div><div class="word" style="font-size:'+fsize(wl,22,40)+'">'+fword(wl)+'</div>'+(sub?'<div class="fs">'+esc(sub)+'</div>':'');
   el.className='on '+(f.k==='skip'?'skip':f.k);
   flashUntil=Date.now()+2600;
   clearTimeout(flashT);clearTimeout(el._bye);el._bye=setTimeout(function(){el.classList.add('bye')},2100);flashT=setTimeout(function(){el.className='';render()},2600);
@@ -285,12 +296,12 @@ function render(){
 var cardT=null,cardB=null;
 function showCard(s){
   var el=$('card'),big,sub,len;
-  if(s.phase==='sd'){big=s.sdRound===1?'Sudden Death':'Round '+s.sdRound;sub=(s.sdRound===1?'':'Sudden Death, ')+'Board at '+s.angle+'°'}
-  else{big='Round '+s.round;sub=s.round===s.total?'Final boulder':'Boulder '+s.round+' of '+s.total}
-  len=big.length;
-  var words=big.split(' ');
+  var lines;
+  if(s.phase==='sd'&&s.sdRound===1){lines=[{w:'Sudden',c:'var(--red)'},{w:'Death',c:'var(--w)'}];sub='Board at '+s.angle+'°'}
+  else if(s.phase==='sd'){lines=[{w:'Round',c:'var(--red)'},{w:numWord(s.sdRound),c:'var(--w)'}];sub='Sudden Death, board at '+s.angle+'°'}
+  else{lines=[{w:'Round',c:'var(--red)'},{w:numWord(s.round),c:'var(--w)'}];sub=s.round===s.total?'Final boulder':'Boulder '+s.round+' of '+s.total}
   el.className='';void el.offsetWidth;
-  el.innerHTML='<div style="font-size:'+Math.min(17,80/(Math.max.apply(null,words.map(function(w){return w.length}))*0.74)).toFixed(2)+'vw">'+ransom(words.length>1&&len>8?[{w:words[0],c:'red'},{w:words.slice(1).join(' '),c:'wht'}]:[{w:big,c:'red'}])+'</div><div class="cs">'+esc(sub)+'</div>';
+  el.innerHTML='<div style="font-size:'+fsize(lines,20,62)+'">'+fword(lines)+'</div><div class="cs">'+esc(sub)+'</div>';
   el.className='on';
   clearTimeout(cardT);clearTimeout(cardB);
   cardB=setTimeout(function(){el.classList.add('bye')},3000);
