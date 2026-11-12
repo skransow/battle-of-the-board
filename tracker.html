@@ -197,8 +197,7 @@ function startSD(){
   if(order.length===1){var w=P(order[0]);w.place=1;S.phase='done';S.queue=[];S.obs={st:'done',left:0};S.popup={t:'We have a winner',sub:w.name+' is the last climber standing.',lists:[]};return}
   var lv=function(id){var n=P(id).lives;return n+(n===1?' life':' lives')};
   S.popup={t:'Sudden Death begins',sub:'The board is at '+S.angle+'° and gets 5° steeper every round. No skips.',lists:[
-    {h:'Sent it: +1 bonus life',i:bonus.map(function(id){return {n:P(id).name,s:'Now '+lv(id)}})},
-    {h:'Skipped in: no bonus',i:skips.map(function(id){return {n:P(id).name,s:lv(id)}})},
+    {h:'Survived the last boulder',i:order.filter(function(id){return res.indexOf(id)<0}).map(function(id){return {n:P(id).name,s:bonus.indexOf(id)>-1?'Sent it, +1 bonus life, now '+lv(id):skips.indexOf(id)>-1?'Skipped it, no bonus, '+lv(id):lv(id)}})},
     {h:'Back with 1 life',i:names(res)},
     {h:'Climbing order',i:order.map(function(id){return {n:P(id).name,s:lv(id)}})}]};
 }
