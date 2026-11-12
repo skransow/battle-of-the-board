@@ -182,7 +182,7 @@ function startSD(){
 }
 function nextSD(){
   var el=elimThis(),d=S.sdRound;
-  closeRound();S.queue=S.sent.filter(function(id){return !P(id).out});S.rOrder=S.queue.slice();S.sent=[];S.angle+=5;S.sdRound++;resetTimer();
+  closeRound();S.queue=S.sent.filter(function(id){return !P(id).out});S.rOrder=S.queue.slice();S.sent=[];S.angle+=5;S.sdRound++;S.obs={st:'done',left:0};
   S.popup={t:'Sudden Death round '+d+' complete',sub:'Round '+S.sdRound+' is at '+S.angle+'°.',lists:[{h:'Eliminated this round',i:el},{h:'Climbing order',i:names(S.queue)}]};
 }
 function after(){
