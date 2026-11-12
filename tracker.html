@@ -70,6 +70,8 @@ ol.draw{columns:2;padding-left:30px;margin:10px 0 0}
 .modal h2{margin-top:0;font-size:34px}
 .modal .sub{color:var(--red);text-transform:uppercase;font-size:11px;font-weight:700;letter-spacing:.05em;margin-top:10px}
 .modal ol{padding-left:28px;margin:4px 0 12px}
+.modal ol li{padding:2px 0 6px}
+.modal ol li .pp{display:block;font-size:11px;color:var(--red);text-transform:uppercase;letter-spacing:.04em;font-weight:700}
 a{color:var(--red)}
 
 .ransom{display:inline-flex;flex-direction:column;gap:.06em;font-family:Anton,Impact,sans-serif;font-weight:400;line-height:1;text-transform:uppercase}
@@ -301,7 +303,7 @@ function head(){
 }
 function modal(){
   var p=S.popup,h='<div class="ov"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt"><h2 id="mt">'+esc(p.t)+'</h2>'+(p.sub?'<p>'+esc(p.sub)+'</p>':'');
-  p.lists.forEach(function(l){if(l.i.length)h+='<div class="sub">'+l.h+'</div><ol>'+l.i.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ol>'});
+  p.lists.forEach(function(l){if(l.i.length)h+='<div class="sub">'+l.h+'</div><ol>'+l.i.map(function(x){var m=/^(.*) \(prize place (\d+)\)$/.exec(String(x));return '<li>'+(m?esc(m[1])+'<span class="pp">Prize place '+m[2]+'</span>':esc(x))+'</li>'}).join('')+'</ol>'});
   return h+'<div class="acts"><button id="dm" class="b-go" data-a="dismiss">Continue</button></div></div></div>';
 }
 function render(){
