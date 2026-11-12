@@ -56,8 +56,9 @@ footer .chip{border:2px solid var(--w);color:var(--w);padding:.1em .6em}
 .center{grid-row:2;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2.2vh}
 .center .lab{align-self:center}
 .big{font:400 clamp(60px,11vw,220px)/.9 Anton,Impact,sans-serif}
-.order{columns:4;column-gap:3vw;text-align:left;font-size:clamp(12px,1.4vw,26px);margin:0;padding-left:2.4em;max-width:92vw}
-.order li{padding:.3vh 0;break-inside:avoid}
+.order{list-style:none;display:grid;grid-auto-flow:column;grid-template-columns:repeat(4,minmax(0,1fr));column-gap:3vw;text-align:left;font-size:clamp(12px,1.4vw,26px);margin:0;padding:0;width:min(92vw,1400px)}
+.order li{padding:.3vh 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.order li span{display:inline-block;width:2.4em;color:var(--red)}
 .podium{display:flex;gap:3vw;align-items:flex-end;justify-content:center}
 .podium div{text-align:center}
 .podium .pl{display:inline-block;background:var(--w);color:var(--k);padding:.2em .6em;font-size:clamp(11px,1.3vw,24px)}
@@ -219,7 +220,7 @@ function hearts(n){n=Math.max(n,0);return '<span class="f'+(n===1?' last':'')+'"
 function alive(){return last.players.filter(function(p){return !p.out})}
 function head(){
   var s=last,t='',gr='',sub='';
-  if(s.phase==='setup'){t='Starting soon'}
+  if(s.phase==='setup'){t=''}
   else if(s.phase==='round'){t='Round '+s.round+' of '+s.total;sub=alive().length+' climbers still in'}
   else if(s.phase==='sd'){t='Sudden Death, round '+s.sdRound;gr='<span class="g sd">'+s.angle+'°</span>';sub=alive().length+' climbers still in, no skips'}
   else{t='Final results'}
@@ -234,7 +235,8 @@ function render(){
   var s=last,h=head();
   if(s.phase==='setup'){
     h+='<div class="center"><div class="big">Starting soon</div>';
-    if(s.players.length)h+='<div class="lab">'+s.players.length+' climbers in the draw</div><ol class="order">'+s.players.map(function(p){return '<li>'+esc(p.name)+'</li>'}).join('')+'</ol>';
+    var nl=s.players.length?s.players.map(function(p){return p.name}):(s.names||[]);
+    if(nl.length)h+='<div class="lab">'+nl.length+(nl.length===1?' climber':' climbers')+'</div><ol class="order" style="grid-template-rows:repeat('+Math.ceil(nl.length/4)+',auto)">'+nl.map(function(n,i){return '<li><span>'+(i+1)+'</span>'+esc(n)+'</li>'}).join('')+'</ol>';
     h+='</div><footer></footer>';
   }else if(s.phase==='done'){
     var by={};s.players.forEach(function(p){by[p.place]=p});

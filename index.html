@@ -215,7 +215,7 @@ function linkCode(){var c=null;try{c=localStorage.getItem('botb-code')}catch(e){
 function upCount(){return LINK.clients.filter(function(c){return c.connected}).length}
 function linkLabel(){if(Date.now()-LINK.lastSeen<15000)return 'Display connected';if(!window.mqtt)return 'Display link unavailable. Check the internet connection and reload.';return upCount()?'Waiting for a display':'Connecting to the message server'}
 function refreshLink(){var el=document.getElementById('linkst');if(el)el.textContent=linkLabel()}
-function payload(){return {type:'state',sentAt:Date.now(),s:{phase:S.phase,round:S.round,total:S.total,angle:S.angle,sdRound:S.sdRound,players:S.players,queue:S.queue,sent:S.sent,skipped:S.skipped,popup:S.popup||null,flash:S.flash||null},timer:{st:S.obs?S.obs.st:'done',left:obsLeft(),ms:S.obs&&S.obs.st==='running'?Math.max(0,S.obs.endAt-Date.now()):obsLeft()*1000,full:obsLen()}}}
+function payload(){return {type:'state',sentAt:Date.now(),s:{phase:S.phase,round:S.round,total:S.total,angle:S.angle,sdRound:S.sdRound,players:S.players,queue:S.queue,sent:S.sent,skipped:S.skipped,popup:S.popup||null,flash:S.flash||null,names:S.phase==='setup'?S.names.split('\n').map(function(x){return x.trim()}).filter(Boolean):[]},timer:{st:S.obs?S.obs.st:'done',left:obsLeft(),ms:S.obs&&S.obs.st==='running'?Math.max(0,S.obs.endAt-Date.now()):obsLeft()*1000,full:obsLen()}}}
 function pub(c,m){if(c.connected)try{c.publish(topic('state'),m,{retain:true,qos:0})}catch(e){}}
 function broadcast(){if(!LINK.code)return;var m=JSON.stringify(payload());LINK.clients.forEach(function(c){pub(c,m)})}
 function startLink(){
