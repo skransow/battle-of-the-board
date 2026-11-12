@@ -98,7 +98,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--mull);outline-o
 <div id="connect">
   <form id="cf">
     <h1>Battle of the Board</h1>
-    <p>Enter the 4-character display code shown at the top of the tracker on the iPad.</p>
+    <p>Enter the 4-character display code shown at the top of the tracker on the Tracker Device.</p>
     <label for="ci" style="position:absolute;left:-9999px">Display code</label>
     <input id="ci" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false">
     <button type="submit">Connect display</button>
@@ -111,7 +111,7 @@ try{code=localStorage.getItem('botb-display-code')}catch(e){}
 function $(id){return document.getElementById(id)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function g(n){return 'V'+(n+3)}
-function status(t,live){$('st').textContent=t;$('dot').className='dot'+(live?' live':'')}
+function status(t,live){$('st').textContent=t;$('dot').className='dot'+(live?' live':'');var b=$('bigst');if(b)b.textContent=t}
 
 /* ---------- link ---------- */
 function later(ms){clearTimeout(retry);retry=setTimeout(connect,ms||3000)}
@@ -124,7 +124,7 @@ function connect(){
     peer.on('open',dial);
     peer.on('disconnected',function(){status('Link dropped, reconnecting');setTimeout(function(){if(peer&&!peer.destroyed)try{peer.reconnect()}catch(e){}},2000)});
     peer.on('error',function(e){var t=e&&e.type;
-      if(t==='peer-unavailable'){status('No tracker found for code '+code+'. Is the tracker open on the iPad? Retrying');later(4000)}
+      if(t==='peer-unavailable'){status('No tracker found for code '+code+'. Is the tracker open on the Tracker Device? Retrying');later(4000)}
       else{status('Link problem, retrying');try{peer.destroy()}catch(x){}later(4000)}});
     status('Connecting to '+code);
   }else if(peer.open)dial();
@@ -183,7 +183,7 @@ function head(){
 function render(){
   var st=$('stage');
   if(!last){
-    st.innerHTML='<header><div><div class="brand">Battle of the Board</div><div class="host">Tension Board 2, hosted by Rock Revolution</div></div></header><div class="center"><div class="big">Stand by</div><div class="lab">Waiting for the tracker</div></div><footer></footer>';
+    st.innerHTML='<header><div><div class="brand">Battle of the Board</div><div class="host">Tension Board 2, hosted by Rock Revolution</div></div></header><div class="center"><div class="big">Stand by</div><div class="lab">Waiting for the Tracker Device</div><div class="lab" id="bigst" style="max-width:70vw">'+esc($('st').textContent)+'</div></div><footer></footer>';
     $('pop').className='';return;
   }
   var s=last,h=head();
