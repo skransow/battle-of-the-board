@@ -297,8 +297,8 @@ function render(){
   if(S.phase==='setup'){
     h+='<h2>Set up the competition</h2><div class="panel"><label for="names" class="sub">One competitor per line</label><textarea id="names" placeholder="Alex&#10;Sam&#10;Jordan">'+esc(S.names)+'</textarea><p class="sub" id="cnt" style="margin:8px 0 0;font-weight:600">'+count()+'</p>'+
     '<div class="row" style="margin-top:12px"><label>Number of boulders<input id="total" type="number" min="1" value="'+S.total+'"></label><label>Sudden Death starting angle (5° steps)<input id="angle" type="number" step="5" min="0" value="'+S.angle+'"></label><label>Observation time (seconds, 0 for none)<input id="obslen" type="number" step="15" min="0" value="'+obsLen()+'"></label></div>'+
-    '<div class="acts"><button class="b-hand" data-a="draw">Draw from the hat</button><button class="b-go" data-a="start"'+(S.players.length>=2?'':' disabled')+'>Start round 1</button><button data-a="startorder">Start with my order</button></div></div>';
-    if(S.players.length){h+='<h2>Climbing order ('+S.players.length+')</h2><div class="panel"><ol class="draw">'+S.players.map(function(p){return '<li>'+esc(p.name)+'</li>'}).join('')+'</ol><p class="sub">Editing the names above? Draw again to refresh the order.</p></div>'}
+    '<div class="acts"><button class="b-hand" data-a="draw">Randomize</button><button class="b-go" data-a="start"'+(S.players.length>=2?'':' disabled')+'>Start round 1</button><button data-a="startorder">Start with my order</button></div></div>';
+    if(S.players.length){h+='<h2>Climbing order ('+S.players.length+')</h2><div class="panel"><ol class="draw">'+S.players.map(function(p){return '<li>'+esc(p.name)+'</li>'}).join('')+'</ol><p class="sub">Editing the names above? Randomize again to refresh the order.</p></div>'}
   }else{
     var cur=P(S.queue[0]),sd=S.phase==='sd';
     var title=S.phase==='done'?'Final standings':(sd?'Sudden Death, round '+S.sdRound+' at '+S.angle+'°':'Round '+S.round+' of '+S.total);
