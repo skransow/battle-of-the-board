@@ -131,20 +131,20 @@ async function exportPdf(){
   if(!window.jspdf||!window.jspdf.jsPDF){say('The PDF library did not load. Check your connection and reload the page.');return}
   var dl=null;try{dl=window.claude?await window.claude.use('downloads'):null}catch(e){}
   var doc=new window.jspdf.jsPDF({unit:'pt',format:'letter'}),W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),M=40,DARK=[28,31,36];
-  doc.setFillColor(28,31,36);doc.rect(0,0,W,112,'F');
-  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(32);doc.text('BATTLE OF THE BOARD',M,55);
-  doc.setFont('helvetica','normal');doc.setFontSize(13);doc.text('Tension Board 2 Competition  |  Hosted by Rock Revolution',M,78);
-  doc.setFontSize(11);doc.text('Official results  |  '+new Date().toLocaleDateString(),M,97);
+  doc.setFillColor(28,31,36);doc.rect(0,0,W,78,'F');
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(24);doc.text('BATTLE OF THE BOARD',M,36);
+  doc.setFont('helvetica','normal');doc.setFontSize(10);doc.text('Tension Board 2 Competition  |  Hosted by Rock Revolution',M,53);
+  doc.setFontSize(9);doc.text('Official results  |  '+new Date().toLocaleDateString(),M,67);
   var win=S.players.filter(function(p){return p.place===1})[0],mainN=0,sdN=0,elimAt={},lives={},alive={},resSet=[];
   S.log.forEach(function(r){if(r.t==='sd'){sdN++;if(r.n===1)resSet=r.res}else mainN++});
   S.players.forEach(function(p){lives[p.id]=3;alive[p.id]=1});
   S.log.forEach(function(r){var lab=r.t==='sd'?'Sudden Death round '+r.n:'Round '+r.n;r.ev.forEach(function(e){if(e[0]==='E')elimAt[e[1]]=lab})});
-  var y=142;
-  doc.setTextColor(28,31,36);doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text('Winner: '+(win?win.name:'-'),M,y);
-  doc.setFont('helvetica','normal');doc.setFontSize(11);doc.text(S.players.length+' climbers  |  '+mainN+' rounds  |  '+sdN+' Sudden Death rounds',M,y+18);
-  y+=48;
-  function head(t){if(y>680){doc.addPage();y=50}doc.setTextColor(28,31,36);doc.setFont('helvetica','bold');doc.setFontSize(15);doc.text(t,M,y);y+=12}
-  function table(cols,rows){doc.autoTable({startY:y,head:[cols],body:rows,margin:{left:M,right:M},styles:{fontSize:10,cellPadding:5},headStyles:{fillColor:DARK,textColor:255}});y=doc.lastAutoTable.finalY+28}
+  var y=104;
+  doc.setTextColor(28,31,36);doc.setFont('helvetica','bold');doc.setFontSize(14);doc.text('Winner: '+(win?win.name:'-'),M,y);
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.text(S.players.length+' climbers  |  '+mainN+' rounds  |  '+sdN+' Sudden Death rounds',M,y+14);
+  y+=34;
+  function head(t){if(y>690){doc.addPage();y=46}doc.setTextColor(28,31,36);doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text(t,M,y);y+=8}
+  function table(cols,rows){doc.autoTable({startY:y,head:[cols],body:rows,margin:{left:M,right:M},styles:{fontSize:8.5,cellPadding:{top:2.6,bottom:2.6,left:6,right:6},lineWidth:0},headStyles:{fillColor:DARK,textColor:255,fontSize:8.5},alternateRowStyles:{fillColor:[244,244,244]}});y=doc.lastAutoTable.finalY+22}
   head('Final ranking');
   var ranked=S.players.filter(function(p){return p.place}).sort(function(a,b){return a.place-b.place});
   var rows=ranked.map(function(p){return [p.place===1?'1 (Winner)':p.place,p.name,p.place===1?'Last climber standing':(elimAt[p.id]||'')]});
