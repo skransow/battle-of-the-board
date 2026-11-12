@@ -263,7 +263,7 @@ function render(){
   }
   st.innerHTML=h;tick();
   var pop=$('pop');
-  if(s.popup&&Date.now()>=flashUntil){
+  if(s.popup){
     var b='<div class="box"><h1>'+esc(s.popup.t)+'</h1>'+(s.popup.sub?'<p>'+esc(s.popup.sub)+'</p>':'')+'<div class="cols">';
     s.popup.lists.forEach(function(l){if(l.i.length)b+='<div><h3>'+esc(l.h)+'</h3><ol>'+l.i.map(function(x){var m=/^(.*) \(prize place (\d+)\)$/.exec(String(x));return '<li>'+(m?esc(m[1])+'<span class="pp">Prize place '+m[2]+'</span>':esc(x))+'</li>'}).join('')+'</ol></div>'});
     pop.innerHTML=b+'</div></div>';pop.className='on';
