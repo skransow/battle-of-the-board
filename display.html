@@ -35,6 +35,14 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:2vw
 .pill.off{background:transparent;color:#5c5c5c;border:2px solid #333;text-decoration:line-through;transform:none}
 .timer{font:400 clamp(30px,4vw,76px)/1 Anton,Impact,sans-serif;font-variant-numeric:tabular-nums;color:var(--red)}
 .timer.idle{color:var(--g)}
+#obsov{position:fixed;inset:0;z-index:15;background:rgba(5,5,5,.8);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);display:grid;grid-template-columns:1.7fr 1fr;gap:2.4vw;padding:3vh 3vw;pointer-events:none}
+#obsov .ovl{grid-column:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1.6vh}
+#obsov .lab{align-self:center}
+.otm{margin-top:2.4vh;font:400 clamp(120px,21vw,400px)/.85 Anton,Impact,sans-serif;color:var(--w);font-variant-numeric:tabular-nums}
+.otm.paused{color:var(--g)}
+.otm.hot{color:var(--red)}
+.ost{color:var(--g);font-size:clamp(14px,1.8vw,34px);letter-spacing:.06em}
+#stage.observing .side{position:relative;z-index:16;border-color:var(--w)}
 .side{background:var(--panel);border:3px solid var(--line);padding:3vh 2vw;min-height:0;overflow:hidden}
 .side h2{margin:0 0 1.6vh;display:inline-block;background:var(--w);color:var(--k);padding:.25em .7em;font-size:clamp(12px,1.25vw,22px);letter-spacing:.06em;font-weight:700}
 .next{list-style:none;margin:0;padding:0}
@@ -228,22 +236,26 @@ function render(){
     var rest=s.players.filter(function(p){return p.place>3}).sort(function(a,b){return a.place-b.place});
     h+='<div class="center"><div class="podium">'+pd(2,'p2')+pd(1,'p1')+pd(3,'p3')+'</div>'+(rest.length?'<ol class="rest">'+rest.map(function(p){return '<li><span>'+p.place+'</span>'+esc(p.name)+'</li>'}).join('')+'</ol>':'')+'</div><footer>'+s.players.length+' climbers competed</footer>';
   }else{
-    var cur=P(s.queue[0]),sd=s.phase==='sd';
+    var cur=P(s.queue[0]),sd=s.phase==='sd',observing=!!cur&&obs.st!=='done';
     h+='<div class="main"><section class="now">';
     if(cur){
       h+='<div class="lab">'+(obs.st!=='done'?'Up first':'Now climbing')+'</div><div class="who">'+esc(cur.name)+'</div><div class="hearts" aria-label="'+cur.lives+' lives">'+hearts(cur.lives)+'</div><div class="meta">';
       if(!sd)h+='<span class="pill'+(cur.mull?'':' off')+'">'+(cur.mull?'Skip available':'Skip used')+'</span>';
-      h+='<span class="timer" id="tm"></span></div>';
+      if(!observing)h+='<span class="timer" id="tm"></span>';
+      h+='</div>';
     }else h+='<div class="lab">Between turns</div><div class="who">Stand by</div>';
-    h+='</section><section class="side"><h2>Up next</h2><ul class="next">';
-    var nx=s.queue.slice(1,9);
+    var off=observing?0:1;
+    h+='</section><section class="side"><h2>'+(observing?'On deck':'Up next')+'</h2><ul class="next">';
+    var nx=s.queue.slice(off,off+8);
     if(!nx.length)h+='<li><span class="nm" style="color:var(--mute)">No one else in line</span></li>';
     nx.forEach(function(id,i){var p=P(id);h+='<li><span class="n">'+(i+1)+'</span><span class="nm">'+esc(p.name)+'</span><span class="h">'+'♥'.repeat(Math.max(p.lives,0))+'</span></li>'});
-    if(s.queue.length>9)h+='<li><span class="nm" style="color:var(--mute)">+'+(s.queue.length-9)+' more</span></li>';
+    if(s.queue.length>off+8)h+='<li><span class="nm" style="color:var(--mute)">+'+(s.queue.length-off-8)+' more</span></li>';
     h+='</ul></section></div>';
     var out=s.players.filter(function(p){return p.out}).length;
     h+='<footer><span>Sent <b>'+s.sent.length+'</b></span><div class="chips">'+s.sent.map(function(id){return '<span class="chip">'+esc(P(id).name)+'</span>'}).join('')+'</div><span>Eliminated <b>'+out+'</b></span></footer>';
+    if(observing)h+='<div id="obsov"><div class="ovl"><div class="lab">'+(sd?'Sudden Death at '+s.angle+'°':'Round '+s.round+' of '+s.total)+'</div><div class="otm" id="otm"></div><div class="ost" id="ost"></div></div></div>';
   }
+  st.className=(s.phase==='round'||s.phase==='sd')&&s.queue.length&&obs.st!=='done'?'observing':'';
   st.innerHTML=h;tick();
   var pop=$('pop');
   if(s.popup&&Date.now()>=flashUntil){
@@ -253,7 +265,8 @@ function render(){
   }else pop.className='';
 }
 function mmss(l){return Math.floor(l/60)+':'+String(l%60).padStart(2,'0')}
-function tick(){var el=$('tm');if(!el)return;var t='';if(obs.st==='running'){var l=Math.ceil((tEnd-Date.now())/1000);if(l>0)t='Observe '+mmss(l)}else if(obs.st==='paused')t='Paused '+mmss(obs.left);else if(obs.st==='pending')t='Observe '+mmss(obs.left);el.textContent=t;el.className='timer'+(obs.st==='running'?'':' idle')}
+function tick(){var o=$('otm');if(o){var l=obs.st==='running'?Math.max(0,Math.ceil((tEnd-Date.now())/1000)):obs.left;o.textContent=mmss(l);o.className='otm'+(obs.st==='paused'?' paused':obs.st==='running'&&l<=10?' hot':'');$('ost').textContent=obs.st==='pending'?'Observation starts soon':obs.st==='paused'?'Observation paused':'Observation time'}
+  var el=$('tm');if(!el)return;var t='';if(obs.st==='running'){var l=Math.ceil((tEnd-Date.now())/1000);if(l>0)t='Observe '+mmss(l)}else if(obs.st==='paused')t='Paused '+mmss(obs.left);else if(obs.st==='pending')t='Observe '+mmss(obs.left);el.textContent=t;el.className='timer'+(obs.st==='running'?'':' idle')}
 setInterval(tick,250);
 
 render();
