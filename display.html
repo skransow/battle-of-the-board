@@ -75,7 +75,9 @@ footer .chip{border:2px solid var(--w);color:var(--w);padding:.1em .6em}
 #flash.on.bye{opacity:0;transition:opacity .5s ease-in}
 .fw{display:inline-flex;flex-direction:column;align-items:flex-start;line-height:1}
 .fl{display:flex;align-items:flex-start}
-.fl+.fl{margin-left:.8em;margin-top:-.16em}
+.fl+.fl{margin-left:.8em;margin-top:-.04em}
+.fw.row{flex-direction:row;gap:.3em}
+.fw.row .fl+.fl{margin:0}
 .g{display:block;height:1em;flex:none;background:currentColor;-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
 .fsp{display:block;width:.25em;flex:none}
 #flash .fn{font:400 clamp(40px,6.5vw,130px)/1 Anton,Impact,sans-serif;margin-bottom:4vh;overflow-wrap:anywhere}
@@ -212,17 +214,17 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')barOpen(fals
 $('fs').addEventListener('click',function(){var d=document.documentElement;if(document.fullscreenElement)document.exitFullscreen();else if(d.requestFullscreen)d.requestFullscreen()});
 
 /* ---------- flash ---------- */
-var GM={"A":[0.6571,0.4976,0.0897],"B":[0.6378,0.4806,0.0897],"C":[0.6442,0.4863,0.0897],"D":[0.6763,0.519,0.0897],"E":[0.5994,0.519,0.0897],"F":[0.6538,0.4964,0.0897],"G":[0.6506,0.4947,0.0897],"H":[0.6955,0.537,0.0897],"I":[0.4423,0.2863,0.0897],"J":[0.6186,0.462,0.0897],"K":[0.6827,0.5257,0.0897],"L":[0.7019,0.5438,0.0897],"M":[0.9423,0.7861,0.0897],"N":[0.7115,0.5544,0.0897],"O":[0.6891,0.5314,0.0897],"P":[0.6026,0.444,0.0897],"Q":[0.8045,0.648,0.0897],"R":[0.6763,0.5178,0.0897],"S":[0.6346,0.4767,0.0897],"T":[0.5801,0.4255,0.0897],"U":[0.6603,0.5014,0.0929],"V":[0.6346,0.4784,0.0897],"W":[0.8846,0.728,0.0897],"X":[0.7404,0.5832,0.0897],"Y":[0.6122,0.4536,0.0897],"Z":[0.6474,0.5133,0.0673]};
-function gname(ch){return ch}
+var GM={"0":[0.4345,0.3981,0.0448],"1":[0.3931,0.3627,0.0241],"2":[0.4448,0.3945,-0.0103],"3":[0.4138,0.4092,-0.0103],"4":[0.5069,0.3779,0.1138],"5":[0.3897,0.3844,-0.0103],"6":[0.469,0.444,-0.0138],"7":[0.4138,0.3354,0.0414],"8":[0.4207,0.3991,-0.0103],"9":[0.4345,0.4279,-0.0172],"A":[0.4138,0.3612,0.0276],"B":[0.4,0.3642,0.0069],"C":[0.4414,0.4001,0.0379],"D":[0.4103,0.3657,0.0138],"E":[0.3552,0.3248,0.0207],"F":[0.3655,0.3683,0.0069],"G":[0.4586,0.3945,0.0172],"H":[0.4379,0.3859,0.0172],"I":[0.269,0.2465,0.0069],"J":[0.3793,0.3233,0.0276],"K":[0.4621,0.3985,0.0345],"L":[0.3517,0.3273,-0.0034],"M":[0.5345,0.544,-0.0103],"N":[0.4414,0.4072,0.0103],"O":[0.4276,0.437,-0.0207],"P":[0.4103,0.4137,0.0069],"Q":[0.4172,0.4107,0.0],"R":[0.4724,0.4259,0.0069],"S":[0.3828,0.3283,0.0207],"T":[0.3897,0.3319,0.0276],"U":[0.4,0.3642,0.0345],"V":[0.3966,0.3475,0.0138],"W":[0.5862,0.5491,0.0069],"X":[0.469,0.4395,0.0034],"Y":[0.4034,0.3435,-0.0069],"Z":[0.4483,0.3218,0.0621],"!":[0.3172,0.3304,-0.0207]};
+function gname(ch){return ch==='!'?'excl':ch}
 function lineAdv(t){var a=0;t.split('').forEach(function(ch){a+=ch===' '?.25:(GM[ch]?GM[ch][1]:.5)});return a}
-function fword(lines){return '<span class="fw" role="img" aria-label="'+esc(lines.map(function(l){return l.w}).join(' '))+'">'+lines.map(function(l){return '<span class="fl" style="color:'+l.c+'">'+l.w.toUpperCase().split('').map(function(ch){if(ch===' ')return '<span class="fsp"></span>';var m=GM[ch];if(!m)return '';var u='url(glyphs/'+gname(ch)+'.png)';return '<span class="g" style="width:'+m[0]+'em;margin-left:'+(-m[2]).toFixed(3)+'em;margin-right:'+(m[1]-m[0]+m[2]).toFixed(3)+'em;-webkit-mask-image:'+u+';mask-image:'+u+'"></span>'}).join('')+'</span>'}).join('')+'</span>'}
-function fsize(lines,maxVw,maxVh){var w=Math.max.apply(null,lines.map(function(l){return lineAdv(l.w.toUpperCase())+(l===lines[1]?.8:0)}));return 'min('+(Math.min(maxVw,86/w)).toFixed(2)+'vw,'+(maxVh/lines.length).toFixed(1)+'vh)'}
+function fword(lines,row){return '<span class="fw'+(row?' row':'')+'" role="img" aria-label="'+esc(lines.map(function(l){return l.w}).join(' '))+'">'+lines.map(function(l){return '<span class="fl" style="color:'+l.c+'">'+l.w.toUpperCase().split('').map(function(ch){if(ch===' ')return '<span class="fsp"></span>';var m=GM[ch];if(!m)return '';var u='url(glyphs/'+gname(ch)+'.png)';return '<span class="g" style="width:'+m[0]+'em;margin-left:'+(-m[2]).toFixed(3)+'em;margin-right:'+(m[1]-m[0]+m[2]).toFixed(3)+'em;-webkit-mask-image:'+u+';mask-image:'+u+'"></span>'}).join('')+'</span>'}).join('')+'</span>'}
+function fsize(lines,maxVw,maxVh,row){var w=row?lines.reduce(function(a,l){return a+lineAdv(l.w.toUpperCase())+.3},-.3):Math.max.apply(null,lines.map(function(l){return lineAdv(l.w.toUpperCase())+(l===lines[1]?.8:0)}));return 'min('+(Math.min(maxVw,86/w)).toFixed(2)+'vw,'+(maxVh/(row?1:lines.length)).toFixed(1)+'vh)'}
 var NUMW=['Zero','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'],TENW=['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
 function numWord(n){if(n<20)return NUMW[n];if(n<100)return TENW[Math.floor(n/10)]+(n%10?' '+NUMW[n%10]:'');return String(n)}
 Object.keys(GM).forEach(function(ch){var i=new Image();i.src='glyphs/'+gname(ch)+'.png'});
 function doFlash(f){
   var el=$('flash'),word,sub='';
-  if(f.k==='sent'){word='SENT';sub='Stand by for the next boulder'}
+  if(f.k==='sent'){word='SENT!';sub='Stand by for the next boulder'}
   else if(f.k==='skip'){word='SKIP';sub='Live to climb another day'}
   else if(f.k==='out'){word='ELIMINATED'}
   else{word='FELL';sub=f.lives+(f.lives===1?' life':' lives')+' left, back of the line'}
@@ -298,10 +300,10 @@ function showCard(s){
   var el=$('card'),big,sub,len;
   var lines;
   if(s.phase==='sd'&&s.sdRound===1){lines=[{w:'Sudden',c:'var(--red)'},{w:'Death',c:'var(--w)'}];sub='Board at '+s.angle+'°'}
-  else if(s.phase==='sd'){lines=[{w:'Round',c:'var(--red)'},{w:numWord(s.sdRound),c:'var(--w)'}];sub='Sudden Death, board at '+s.angle+'°'}
-  else{lines=[{w:'Round',c:'var(--red)'},{w:numWord(s.round),c:'var(--w)'}];sub=s.round===s.total?'Final boulder':'Boulder '+s.round+' of '+s.total}
+  else if(s.phase==='sd'){lines=[{w:'Round',c:'var(--red)'},{w:String(s.sdRound),c:'var(--w)'}];sub='Sudden Death, board at '+s.angle+'°'}
+  else{lines=[{w:'Round',c:'var(--red)'},{w:String(s.round),c:'var(--w)'}];sub=s.round===s.total?'Final boulder':'Boulder '+s.round+' of '+s.total}
   el.className='';void el.offsetWidth;
-  el.innerHTML='<div style="font-size:'+fsize(lines,20,62)+'">'+fword(lines)+'</div><div class="cs">'+esc(sub)+'</div>';
+  el.innerHTML='<div style="font-size:'+fsize(lines,22,40,true)+'">'+fword(lines,true)+'</div><div class="cs">'+esc(sub)+'</div>';
   el.className='on';
   clearTimeout(cardT);clearTimeout(cardB);
   cardB=setTimeout(function(){el.classList.add('bye')},3000);
