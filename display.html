@@ -160,7 +160,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--red);outline-of
 </div>
 <div id="bar"><div id="barpanel" hidden><div class="bst"><span class="dot" id="dot"></span><span id="st">Not connected</span></div><button id="chg">Change code</button><button id="fs">Full screen</button><a class="mb" href="./">Menu</a></div><button id="bartog" aria-expanded="false" aria-controls="barpanel" aria-label="Connection and settings"><span class="dot" id="dot2"></span>&#8943;</button></div>
 <script>
-var firstState=true,code=null,clients=[],gotState=false,lastSent=0,last=null,seen=0,first=true,flashUntil=0,tEnd=0,obs={st:'done',left:0},retry=null,flashT=null;
+var cardKey='',firstState=true,code=null,clients=[],gotState=false,lastSent=0,last=null,seen=0,first=true,flashUntil=0,tEnd=0,obs={st:'done',left:0},retry=null,flashT=null;
 try{code=localStorage.getItem('botb-display-code')}catch(e){}
 function $(id){return document.getElementById(id)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
@@ -203,7 +203,9 @@ function onData(m){
   first=false;
   obs=m.timer&&m.timer.st?m.timer:{st:'done',left:0};
   tEnd=obs.st==='running'?Date.now()+Math.min(obs.ms!=null?obs.ms:obs.left*1000,(obs.full||9999)*1000):0;
-  if(last&&!firstState&&(s.phase==='round'||s.phase==='sd')&&((last.popup&&!s.popup)||(last.phase==='setup'&&s.phase==='round')))showCard(s);
+  var ckey=s.phase+':'+s.round+':'+s.sdRound;
+  if(firstState||!last)cardKey=ckey;
+  else if((s.phase==='round'||s.phase==='sd')&&ckey!==cardKey&&((last.popup&&!s.popup)||(last.phase==='setup'&&s.phase==='round'))){cardKey=ckey;showCard(s)}
   firstState=false;
   last=s;render();upd();
 }
