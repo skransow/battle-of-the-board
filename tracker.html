@@ -74,6 +74,8 @@ ol.draw{columns:2;padding-left:30px;margin:10px 0 0}
 .modal ul.notes{margin:10px 0 14px;padding-left:20px}
 .modal ul.notes li{margin:6px 0;line-height:1.4}
 .modal ol li{padding:2px 0 6px}
+.modal ol li .ps{display:block;font-size:11px;color:var(--g);text-transform:uppercase;letter-spacing:.04em;font-weight:700}
+.modal ol li{overflow-wrap:anywhere}
 .modal ol li .pp{display:block;font-size:11px;color:var(--red);text-transform:uppercase;letter-spacing:.04em;font-weight:700}
 a{color:var(--red)}
 
@@ -186,13 +188,19 @@ function startSD(){
   var res=active().length<3?S.players.filter(function(p){return p.out&&p.outRound===S.round}).map(function(p){return p.id}):[];
   // Bonus life only for climbers who actually sent that boulder (not skips)
   var bonus=S.sent.filter(function(id){return !P(id).out});
+  var skips=S.skipped.filter(function(id){return !P(id).out});
   var order=uniq(S.sent.concat(S.queue,S.skipped,res)).filter(function(id){return !P(id).out||res.indexOf(id)>-1});
   S.angle=Math.max(0,Math.round(S.angle/5)*5);
   bonus.forEach(function(id){P(id).lives++});
   S.players.forEach(function(p){if(order.indexOf(p.id)>-1){if(p.out){p.lives=1;p.out=false;p.place=null;p.outRound=null}p.mull=false}});
   S.phase='sd';S.sdRound=1;S.queue=order;S.rOrder=order.slice();S.sdRes=res;S.sdBonus=bonus;S.sent=[];S.skipped=[];S.fell=[];S.note='';resetTimer();
   if(order.length===1){var w=P(order[0]);w.place=1;S.phase='done';S.queue=[];S.obs={st:'done',left:0};S.popup={t:'We have a winner',sub:w.name+' is the last climber standing.',lists:[]};return}
-  S.popup={t:'Sudden Death begins',sub:'The board is at '+S.angle+'° and gets 5° steeper every round. No skips.',lists:[{h:'Sent the last boulder: +1 bonus life',i:names(bonus)},{h:'Back from elimination with 1 life',i:names(res)},{h:'Climbing order',i:names(order)}]};
+  var lv=function(id){var n=P(id).lives;return n+(n===1?' life':' lives')};
+  S.popup={t:'Sudden Death begins',sub:'The board is at '+S.angle+'° and gets 5° steeper every round. No skips.',lists:[
+    {h:'Sent it: +1 bonus life',i:bonus.map(function(id){return {n:P(id).name,s:'Now '+lv(id)}})},
+    {h:'Skipped in: no bonus',i:skips.map(function(id){return {n:P(id).name,s:lv(id)}})},
+    {h:'Back with 1 life',i:names(res)},
+    {h:'Climbing order',i:order.map(function(id){return {n:P(id).name,s:lv(id)}})}]};
 }
 function nextSD(){
   var el=elimThis(),d=S.sdRound;
@@ -221,7 +229,7 @@ function doAct(a){
     S.final3=S.round;
     S.popup={t:'Final 3',sub:'Only 3 climbers are left. This boulder will be finished, then Sudden Death begins.',
       notes:['Send this boulder and you take a bonus life into Sudden Death.','Use a skip and you go in with the lives you have, no bonus.','If fewer than 3 climbers survive this boulder, everyone it eliminated comes back with 1 life.'],
-      lists:[{h:'Still in',i:active().map(function(p){return p.name+' ('+p.lives+(p.lives===1?' life':' lives')+')'})}]};
+      lists:[{h:'Still in',i:active().map(function(p){var lv=p.lives+(p.lives===1?' life':' lives'),st=S.sent.indexOf(p.id)>-1?'sent it, +1 bonus life in Sudden Death':S.skipped.indexOf(p.id)>-1?'skipped it, no bonus':'still to climb';return {n:p.name,s:lv+', '+st}})}]};
   }
   after();
 }
@@ -320,7 +328,7 @@ function head(){
 function notesHtml(p){return p.notes&&p.notes.length?'<ul class="notes">'+p.notes.map(function(n){return '<li>'+esc(n)+'</li>'}).join('')+'</ul>':''}
 function modal(){
   var p=S.popup,h='<div class="ov"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt"><h2 id="mt">'+esc(p.t)+'</h2>'+(p.sub?'<p>'+esc(p.sub)+'</p>':'')+notesHtml(p);
-  p.lists.forEach(function(l){if(l.i.length)h+='<div class="sub">'+l.h+'</div><ol>'+l.i.map(function(x){var m=/^(.*) \(prize place (\d+)\)$/.exec(String(x));return '<li>'+(m?esc(m[1])+'<span class="pp">Prize place '+m[2]+'</span>':esc(x))+'</li>'}).join('')+'</ol>'});
+  p.lists.forEach(function(l){if(l.i.length)h+='<div class="sub">'+l.h+'</div><ol>'+l.i.map(function(x){if(x&&typeof x==='object')return '<li>'+esc(x.n)+(x.s?'<span class="ps">'+esc(x.s)+'</span>':'')+'</li>';var m=/^(.*) \(prize place (\d+)\)$/.exec(String(x));return '<li>'+(m?esc(m[1])+'<span class="pp">Prize place '+m[2]+'</span>':esc(x))+'</li>'}).join('')+'</ol>'});
   return h+'<div class="acts"><button id="dm" class="b-go" data-a="dismiss">Continue</button></div></div></div>';
 }
 function render(){

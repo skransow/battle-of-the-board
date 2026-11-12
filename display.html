@@ -98,14 +98,16 @@ footer .chip{border:2px solid var(--w);color:var(--w);padding:.1em .6em}
 #pop .box{background:var(--k);border:4px solid var(--w);box-shadow:1.2vw 1.2vw 0 var(--red);padding:4vh 4vw;max-height:90vh;overflow:hidden;width:min(1400px,90vw)}
 #pop h1{margin:0;font:400 clamp(44px,6.5vw,128px)/.95 Anton,Impact,sans-serif}
 #pop p{font-size:clamp(12px,1.5vw,28px);color:var(--g);margin:2vh 0 3.4vh;letter-spacing:.02em}
-#pop .cols{display:flex;gap:4vw}
-#pop .cols>div{flex:1;min-width:0}
+#pop .cols{display:grid;gap:3vw}
+#pop .cols>div{min-width:0}
 #pop ul.notes{list-style:none;margin:0 0 3.4vh;padding:0;font-size:clamp(15px,1.75vw,32px);line-height:1.35}
 #pop ul.notes li{padding:.5vh 0 .5vh 1.4em;position:relative}
 #pop ul.notes li::before{content:'';position:absolute;left:0;top:.55em;width:.55em;height:.55em;background:var(--red)}
 #pop h3{margin:0 0 1.6vh;display:inline-block;background:var(--red);color:var(--k);padding:.25em .7em;font-size:clamp(12px,1.35vw,24px);letter-spacing:.05em}
-#pop ol{margin:0;padding-left:2.2em;columns:2;column-gap:2vw;font-size:clamp(13px,1.5vw,28px)}
-#pop ol li{break-inside:avoid;padding:.2vh 0 .8vh}
+#pop ol{margin:0;padding-left:2.2em;font-size:clamp(13px,1.45vw,27px)}
+#pop ol.two{columns:2;column-gap:2.5vw}
+#pop ol li{break-inside:avoid;padding:.2vh 0 .8vh;overflow-wrap:anywhere}
+#pop ol li .ps{display:block;font-size:.66em;color:var(--g)}
 #pop ol li .pp{display:block;font-size:.7em;color:var(--red)}
 /* connect + status */
 #connect{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:radial-gradient(circle,rgba(255,255,255,.055) 0 1px,transparent 1.6px) 0 0/7px 7px,var(--k);z-index:40;padding:24px}
@@ -296,7 +298,8 @@ function render(){
   var pop=$('pop');
   if(s.popup){
     var b='<div class="box"><h1>'+esc(s.popup.t)+'</h1>'+(s.popup.sub?'<p>'+esc(s.popup.sub)+'</p>':'')+(s.popup.notes&&s.popup.notes.length?'<ul class="notes">'+s.popup.notes.map(function(n){return '<li>'+esc(n)+'</li>'}).join('')+'</ul>':'')+'<div class="cols">';
-    s.popup.lists.forEach(function(l){if(l.i.length)b+='<div><h3>'+esc(l.h)+'</h3><ol>'+l.i.map(function(x){var m=/^(.*) \(prize place (\d+)\)$/.exec(String(x));return '<li>'+(m?esc(m[1])+'<span class="pp">Prize place '+m[2]+'</span>':esc(x))+'</li>'}).join('')+'</ol></div>'});
+    var ls=s.popup.lists.filter(function(l){return l.i.length});b=b.replace('<div class="cols">','<div class="cols" style="grid-template-columns:repeat('+ls.length+',minmax(0,1fr))">');
+    ls.forEach(function(l){b+='<div><h3>'+esc(l.h)+'</h3><ol class="'+(l.i.length>7&&ls.length<=2?'two':'')+'">'+l.i.map(function(x){if(x&&typeof x==='object')return '<li>'+esc(x.n)+(x.s?'<span class="ps">'+esc(x.s)+'</span>':'')+'</li>';var m=/^(.*) \(prize place (\d+)\)$/.exec(String(x));return '<li>'+(m?esc(m[1])+'<span class="pp">Prize place '+m[2]+'</span>':esc(x))+'</li>'}).join('')+'</ol></div>'});
     pop.innerHTML=b+'</div></div>';pop.className='on';
   }else pop.className='';
 }
