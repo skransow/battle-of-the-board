@@ -121,6 +121,8 @@ footer .chip{border:2px solid var(--w);color:var(--w);padding:.1em .6em}
 #connect input{width:100%;font:400 72px Anton,Impact,sans-serif;letter-spacing:.3em;text-align:center;text-transform:uppercase;background:var(--k);color:var(--w);border:3px solid var(--w);border-radius:0;padding:10px 0 10px .3em}
 #connect button{margin-top:18px;width:100%;font:700 20px "Space Mono",monospace;text-transform:uppercase;background:var(--red);color:var(--k);border:0;border-radius:0;padding:16px;cursor:pointer}
 input:focus-visible,button:focus-visible{outline:3px solid var(--red);outline-offset:3px}
+#sndhint{position:fixed;left:14px;bottom:12px;z-index:36;display:none;font:700 12px "Space Mono",monospace;text-transform:uppercase;letter-spacing:.04em;background:var(--red);color:var(--k);padding:8px 12px}
+#sndhint.on{display:block}
 #bar{position:fixed;right:14px;bottom:12px;display:flex;flex-direction:column;align-items:flex-end;gap:8px;font-size:12px;color:var(--g);z-index:35}
 #bartog{display:flex;align-items:center;gap:7px;font:700 14px/1 "Space Mono",monospace;background:var(--k);color:var(--w);border:1px solid #333;border-radius:0;padding:7px 9px;cursor:pointer;opacity:.35;transition:opacity .2s}
 #bartog:hover,#bartog:focus-visible,#bartog[aria-expanded="true"]{opacity:1}
@@ -163,7 +165,8 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--red);outline-of
     <button type="submit">Connect display</button>
   </form>
 </div>
-<div id="bar"><div id="barpanel" hidden><div class="bst"><span class="dot" id="dot"></span><span id="st">Not connected</span></div><button id="chg">Change code</button><button id="fs">Full screen</button><a class="mb" href="./">Menu</a></div><button id="bartog" aria-expanded="false" aria-controls="barpanel" aria-label="Connection and settings"><span class="dot" id="dot2"></span>&#8943;</button></div>
+<div id="sndhint">Click anywhere to turn on sound</div>
+<div id="bar"><div id="barpanel" hidden><div class="bst"><span class="dot" id="dot"></span><span id="st">Not connected</span></div><button id="chg">Change code</button><button id="fs">Full screen</button><button id="snd">Sound: on</button><button id="sndtest">Test sound</button><a class="mb" href="./">Menu</a></div><button id="bartog" aria-expanded="false" aria-controls="barpanel" aria-label="Connection and settings"><span class="dot" id="dot2"></span>&#8943;</button></div>
 <script>
 var cardKey='',firstState=true,code=null,clients=[],gotState=false,lastSent=0,last=null,seen=0,first=true,flashUntil=0,tEnd=0,obs={st:'done',left:0},retry=null,flashT=null;
 try{code=localStorage.getItem('botb-display-code')}catch(e){}
@@ -223,6 +226,24 @@ document.addEventListener('click',function(e){if(!$('bar').contains(e.target))ba
 document.addEventListener('keydown',function(e){if(e.key==='Escape')barOpen(false)});
 $('fs').addEventListener('click',function(){var d=document.documentElement;if(document.fullscreenElement)document.exitFullscreen();else if(d.requestFullscreen)d.requestFullscreen()});
 
+/* ---------- elimination sounds ---------- */
+var SFX=["ack", "bonk", "explosion", "fail", "fail-trumpet", "gunshot", "lego-die", "mystery", "oof", "punch", "punch-hd", "snake", "vine-boom", "wasted", "wilhelm", "yoda"],sfxOn=true,lastSfx=null,sfx={};
+try{sfxOn=localStorage.getItem('botb-sound')!=='off'}catch(e){}
+SFX.forEach(function(n){var a=new Audio('sounds/elim/'+n+'.mp3');a.preload='auto';sfx[n]=a});
+function sndHint(show){var h=$('sndhint');if(h)h.className=show&&sfxOn?'on':''}
+function sndLabel(){$('snd').textContent='Sound: '+(sfxOn?'on':'off')}
+function playElim(force){
+  if(!sfxOn&&!force)return;
+  var pool=SFX.filter(function(n){return n!==lastSfx}),n=pool[Math.floor(Math.random()*pool.length)];lastSfx=n;
+  var a=sfx[n];try{a.pause();a.currentTime=0}catch(e){}
+  var p=a.play();if(p&&p.catch)p.catch(function(){sndHint(true)});
+}
+document.addEventListener('pointerdown',function(){sndHint(false)},{passive:true});
+document.addEventListener('keydown',function(){sndHint(false)});
+if(navigator.userActivation&&!navigator.userActivation.hasBeenActive)setTimeout(function(){if(!navigator.userActivation.hasBeenActive)sndHint(true)},800);
+$('snd').addEventListener('click',function(){sfxOn=!sfxOn;try{localStorage.setItem('botb-sound',sfxOn?'on':'off')}catch(e){}sndLabel();if(!sfxOn)sndHint(false)});
+$('sndtest').addEventListener('click',function(){playElim(true)});
+sndLabel();
 /* ---------- flash ---------- */
 var GM={"A":[0.4073,0.3641,0.0219],"B":[0.3951,0.3671,0.0041],"C":[0.4369,0.4033,0.0351],"D":[0.4027,0.3686,0.0081],"E":[0.3514,0.3274,0.0173],"F":[0.3625,0.3712,0.0041],"G":[0.4511,0.3977,0.0117],"H":[0.4338,0.389,0.0148],"I":[0.2637,0.2485,0.0025],"J":[0.3763,0.3259,0.0255],"K":[0.4562,0.4017,0.0311],"L":[0.3451,0.3299,-0.0081],"M":[0.5326,0.5484,-0.0143],"N":[0.4384,0.4104,0.0066],"O":[0.4241,0.4404,-0.0244],"P":[0.4068,0.417,0.0041],"Q":[0.4134,0.414,-0.0031],"R":[0.4674,0.4292,0.0041],"S":[0.3773,0.331,0.0153],"T":[0.3824,0.3345,0.0224],"U":[0.3971,0.3671,0.0321],"V":[0.3885,0.3503,0.0081],"W":[0.5825,0.5535,0.0041],"X":[0.4628,0.443,-0.001],"Y":[0.3992,0.3462,-0.0112],"Z":[0.444,0.3243,0.058],"0":[0.4297,0.4012,0.0412],"1":[0.3875,0.3656,0.0199],"2":[0.4394,0.3977,-0.0163],"3":[0.4094,0.4124,-0.0153],"4":[0.5041,0.3809,0.1115],"5":[0.3844,0.3875,-0.0163],"6":[0.4633,0.4476,-0.0178],"7":[0.4099,0.3381,0.0372],"8":[0.4129,0.4022,-0.0163],"9":[0.4328,0.4313,-0.0199],"!":[0.3096,0.333,-0.026]};
 function gname(ch){return ch==='!'?'excl':ch}
@@ -236,7 +257,7 @@ function doFlash(f){
   var el=$('flash'),word,sub='';
   if(f.k==='sent'){word='SENT!';sub='Stand by for the next boulder'}
   else if(f.k==='skip'){word='SKIP';sub='Live to climb another day'}
-  else if(f.k==='out'){word='ELIMINATED'}
+  else if(f.k==='out'){word='ELIMINATED';playElim()}
   else{word='FELL';sub=f.lives+(f.lives===1?' life':' lives')+' left, back of the line'}
   el.className='';void el.offsetWidth;
   var tc=f.k==='out'?'var(--red)':f.k==='fell'?'var(--w)':'var(--k)',wl=[{w:word,c:tc}];
