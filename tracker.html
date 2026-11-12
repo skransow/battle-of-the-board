@@ -160,6 +160,7 @@ async function exportPdf(){
       else if(e[0]==='F'){o.f++;lives[e[1]]=e[2];o.r='Fell, round ended'}
       else if(e[0]==='E'){el++;delete alive[e[1]];o.r=(r.t==='main'&&resSet.indexOf(e[1])>-1)?'Eliminated (returned for Sudden Death)':'Eliminated (prize place '+e[2]+')'}
     });
+    doc.addPage();y=46;
     head(lab);
     var note=k+' sent  |  '+el+' eliminated  |  '+Object.keys(alive).length+' remaining';
     if(r.res.length)note+='  |  Returned with 1 life: '+r.res.map(function(id){return P(id).name}).join(', ');
