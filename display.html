@@ -186,7 +186,7 @@ function onData(m){
   if(s.flash&&s.flash.t>seen){if(!first)doFlash(s.flash);seen=s.flash.t}
   first=false;
   obs=m.timer&&m.timer.st?m.timer:{st:'done',left:0};
-  tEnd=obs.st==='running'?m.sentAt+obs.left*1000:0;
+  tEnd=obs.st==='running'?Date.now()+Math.min(obs.ms!=null?obs.ms:obs.left*1000,(obs.full||9999)*1000):0;
   if(last&&!firstState&&(s.phase==='round'||s.phase==='sd')&&((last.popup&&!s.popup)||(last.phase==='setup'&&s.phase==='round')))showCard(s);
   firstState=false;
   last=s;render();upd();
