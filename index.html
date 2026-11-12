@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Battle of the Board</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eceae6;--surf:#fff;--ink:#1c1f24;--mute:#666b73;--line:#d5d2cc;--go:#0a8f5b;--fall:#c8372d;--mull:#b86e00;--hand:#0a7fa6;--on-acc:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15181c;--surf:#1f2429;--ink:#eceae6;--mute:#9aa0a8;--line:#363c44;--go:#34d399;--fall:#ff6b5e;--mull:#f5b041;--hand:#4cc9f0;--on-acc:#10141a}}
+:root[data-theme="dark"]{--bg:#15181c;--surf:#1f2429;--ink:#eceae6;--mute:#9aa0a8;--line:#363c44;--go:#34d399;--fall:#ff6b5e;--mull:#f5b041;--hand:#4cc9f0;--on-acc:#10141a}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:500 16px/1.45 Barlow,system-ui,sans-serif}
+main{max-width:760px;margin:0 auto;padding:16px}
+h1,h2{font-family:"Barlow Condensed","Arial Narrow",sans-serif;margin:0;letter-spacing:.01em}
+h1{font-size:30px;font-weight:700}
+h2{font-size:22px;font-weight:700;margin:22px 0 8px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.sub{color:var(--mute);margin:2px 0 0}
+button{font:600 16px Barlow,system-ui,sans-serif;border:1px solid var(--line);background:var(--surf);color:var(--ink);padding:10px 16px;border-radius:8px;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--hand);outline-offset:2px}
+button:disabled{opacity:.4;cursor:not-allowed}
+.b-go{background:var(--go);color:var(--on-acc);border-color:var(--go)}
+.b-fall{background:var(--fall);color:var(--on-acc);border-color:var(--fall)}
+.b-mull{background:var(--mull);color:var(--on-acc);border-color:var(--mull)}
+.b-hand{background:var(--hand);color:var(--on-acc);border-color:var(--hand)}
+.panel{background:var(--surf);border:1px solid var(--line);border-radius:10px;padding:16px}
+textarea,input{font:500 16px Barlow,system-ui,sans-serif;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+textarea{min-height:160px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row label{flex:1;min-width:140px;color:var(--mute);font-size:14px}
+.now{border-left:8px solid var(--hand)}
+.now .name{font:700 44px/1.05 "Barlow Condensed","Arial Narrow",sans-serif;margin:4px 0 6px;overflow-wrap:anywhere}
+.acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.acts button{flex:1;min-width:110px;padding:14px 10px;font-size:18px}
+.banner{border:2px solid var(--mull);border-radius:10px;padding:12px 16px;margin:12px 0;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.timer{font:700 28px "Barlow Condensed",sans-serif;font-variant-numeric:tabular-nums}
+.stats{display:flex;gap:20px;flex-wrap:wrap;margin-top:8px;color:var(--mute)}
+.stats b{color:var(--ink);font-weight:700}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:420px}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
+th{color:var(--mute);font-weight:600;font-size:14px}
+tr.out td{color:var(--mute)}
+tr.cur td{font-weight:700;background:color-mix(in srgb,var(--hand) 16%,transparent)}
+.heart{color:var(--fall);letter-spacing:2px}
+.tag{display:inline-block;padding:1px 8px;border-radius:99px;font-size:13px;font-weight:600;background:var(--mull);color:var(--on-acc)}
+.tag.used{background:var(--line);color:var(--mute);text-decoration:line-through}
+ol.draw{columns:2;padding-left:26px;margin:10px 0 0}
+.win{font:700 40px "Barlow Condensed",sans-serif}
+.note{color:var(--mull);font-weight:600}
+.link{font-size:14px}.link .code{color:var(--ink);font-size:17px;letter-spacing:.12em;margin:0 6px 0 2px}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+.modal{background:var(--surf);border:1px solid var(--line);border-radius:12px;padding:20px;max-width:480px;width:100%;max-height:85vh;overflow:auto}
+.modal ol{padding-left:26px;margin:4px 0 12px}
+</style>
+<script src="vendor/jspdf.umd.min.js"></script>
+<script src="vendor/jspdf.plugin.autotable.min.js"></script>
+<script src="vendor/peerjs.min.js"></script>
+</head>
+<body>
+<main id="app"></main>
+<script>
+var KEY='tb2-tracker';
+function init(){return {phase:'setup',round:1,total:7,angle:35,sdRound:0,names:'',players:[],queue:[],sent:[],skipped:[],fell:[],note:'',ev:[],log:[],rOrder:[],sdRes:[]}}
+var S=init(),hist=[],armed=false,tLeft=60,tInt=null;
+try{var r=JSON.parse(localStorage.getItem(KEY));if(r&&r.S){S=Object.assign(init(),r.S);hist=r.hist||[]}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({S:S,hist:hist}))}catch(e){}broadcast()}
+function snap(){hist.push(JSON.stringify(S));if(hist.length>80)hist.shift()}
+function P(id){return S.players.filter(function(p){return p.id===id})[0]}
+function active(){return S.players.filter(function(p){return !p.out})}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function fmt(t){return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')}
+function resetTimer(){clearInterval(tInt);tInt=null;tLeft=60}
+function startTimer(){resetTimer();tInt=setInterval(function(){tLeft--;if(tLeft===0)broadcast();var el=document.getElementById('tm');if(el)el.textContent=tLeft>0?fmt(tLeft):'Climb!';if(tLeft<=0)clearInterval(tInt)},1000);render();broadcast()}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function tag(){return S.phase==='sd'?1000+S.sdRound:S.round}
+function eliminate(p){p.place=active().length;p.out=true;p.outRound=tag()}
+function names(ids){return ids.map(function(id){return P(id).name})}
+function elimThis(){return S.players.filter(function(p){return p.out&&p.outRound===tag()}).sort(function(a,b){return b.place-a.place}).map(function(p){return p.name+' (prize place '+p.place+')'})}
+function g(n){return 'V'+(n+3)}
+function grades(){return S.total>1?g(1)+' to '+g(S.total):g(1)}
+function uniq(a){return a.filter(function(x,i){return a.indexOf(x)===i})}
+
+function closeRound(){S.log.push({t:S.phase==='sd'?'sd':'main',n:S.phase==='sd'?S.sdRound:S.round,angle:S.angle,order:S.rOrder.slice(),ev:S.ev.slice(),res:(S.phase==='sd'&&S.sdRound===1)?S.sdRes.slice():[]});S.ev=[]}
+async function exportPdf(){
+  var msg=document.getElementById('pdfmsg');
+  function say(t){if(msg)msg.textContent=t}
+  if(!window.jspdf||!window.jspdf.jsPDF){say('The PDF library did not load. Check your connection and reload the page.');return}
+  var dl=null;try{dl=window.claude?await window.claude.use('downloads'):null}catch(e){}
+  var doc=new window.jspdf.jsPDF({unit:'pt',format:'letter'}),W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),M=40,DARK=[28,31,36];
+  doc.setFillColor(28,31,36);doc.rect(0,0,W,112,'F');
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(32);doc.text('BATTLE OF THE BOARD',M,55);
+  doc.setFont('helvetica','normal');doc.setFontSize(13);doc.text('Tension Board 2 Competition  |  Hosted by Rock Revolution',M,78);
+  doc.setFontSize(11);doc.text('Official results  |  '+new Date().toLocaleDateString(),M,97);
+  var win=S.players.filter(function(p){return p.place===1})[0],mainN=0,sdN=0,elimAt={},lives={},alive={},resSet=[];
+  S.log.forEach(function(r){if(r.t==='sd'){sdN++;if(r.n===1)resSet=r.res}else mainN++});
+  S.players.forEach(function(p){lives[p.id]=3;alive[p.id]=1});
+  S.log.forEach(function(r){var lab=r.t==='sd'?'Sudden Death round '+r.n:'Round '+r.n+' ('+g(r.n)+')';r.ev.forEach(function(e){if(e[0]==='E')elimAt[e[1]]=lab})});
+  var y=142;
+  doc.setTextColor(28,31,36);doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text('Winner: '+(win?win.name:'-'),M,y);
+  doc.setFont('helvetica','normal');doc.setFontSize(11);doc.text(S.players.length+' climbers  |  '+mainN+' rounds  |  '+sdN+' Sudden Death rounds',M,y+18);
+  y+=48;
+  function head(t){if(y>680){doc.addPage();y=50}doc.setTextColor(28,31,36);doc.setFont('helvetica','bold');doc.setFontSize(15);doc.text(t,M,y);y+=12}
+  function table(cols,rows){doc.autoTable({startY:y,head:[cols],body:rows,margin:{left:M,right:M},styles:{fontSize:10,cellPadding:5},headStyles:{fillColor:DARK,textColor:255}});y=doc.lastAutoTable.finalY+28}
+  head('Order of elimination');
+  var out=S.players.filter(function(p){return p.out}).sort(function(a,b){return b.place-a.place});
+  var rows=out.map(function(p,i){return [i+1,p.name,p.place,elimAt[p.id]||'']});
+  if(win)rows.push(['-',win.name,'1 (Winner)','Last climber standing']);
+  table(['Out #','Climber','Prize place','Eliminated in'],rows);
+  S.log.forEach(function(r){
+    var lab=r.t==='sd'?'Sudden Death round '+r.n+' ('+r.angle+' degrees)':'Round '+r.n+' ('+g(r.n)+')';
+    r.res.forEach(function(id){lives[id]=1;alive[id]=1});
+    var info={},k=0,el=0;
+    r.order.forEach(function(id){info[id]={f:0,r:'Did not climb before the round ended'}});
+    r.ev.forEach(function(e){var o=info[e[1]];if(!o)return;
+      if(e[0]==='S'){k++;o.r='Sent (send #'+k+')'}
+      else if(e[0]==='M')o.r='Skip used';
+      else if(e[0]==='F'){o.f++;lives[e[1]]=e[2];o.r='Fell, round ended'}
+      else if(e[0]==='E'){el++;delete alive[e[1]];o.r=(r.t==='main'&&resSet.indexOf(e[1])>-1)?'Eliminated (returned for Sudden Death)':'Eliminated (prize place '+e[2]+')'}
+    });
+    head(lab);
+    var note=k+' sent  |  '+el+' eliminated  |  '+Object.keys(alive).length+' remaining';
+    if(r.res.length)note+='  |  Returned with 1 life: '+r.res.map(function(id){return P(id).name}).join(', ');
+    doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(90,90,90);
+    var ln=doc.splitTextToSize(note,W-2*M);doc.text(ln,M,y+4);y+=ln.length*12+8;
+    table(['Start #','Climber','Falls','Lives left','Result'],r.order.map(function(id,i){var o=info[id];return [i+1,P(id).name,o.f,lives[id],o.r]}));
+  });
+  var n=doc.getNumberOfPages();
+  for(var i=1;i<=n;i++){doc.setPage(i);doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(120,120,120);doc.text('Battle of the Board  |  Rock Revolution',M,H-22);doc.text('Page '+i+' of '+n,W-M,H-22,{align:'right'})}
+  var buf=doc.output('arraybuffer'),fn='Battle-of-the-Board-Results.pdf';
+  if(dl){try{await dl.save({filename:fn,data:buf});say('PDF ready.')}catch(e){say(e&&e.code==='declined'?'Save cancelled.':'Could not save the PDF ('+((e&&e.code)||'error')+').')}return}
+  var blob=new Blob([buf],{type:'application/pdf'}),url=URL.createObjectURL(blob);
+  try{var f=new File([blob],fn,{type:'application/pdf'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'Battle of the Board results'});say('PDF shared.');return}}catch(e){if(e&&e.name==='AbortError'){say('Share cancelled.');return}}
+  if(msg)msg.innerHTML='PDF ready. <a href="'+url+'" download="'+fn+'" style="color:var(--hand);font-weight:600">Save it</a> or <a href="'+url+'" target="_blank" style="color:var(--hand);font-weight:600">open it</a>.';
+}
+function startSD(){
+  closeRound();
+  var res=S.players.filter(function(p){return p.out&&p.outRound===S.round}).map(function(p){return p.id});
+  var order=uniq(S.sent.concat(S.queue,S.skipped,res));S.angle=Math.max(0,Math.round(S.angle/5)*5);
+  S.players.forEach(function(p){if(order.indexOf(p.id)>-1){if(p.out)p.lives=1;p.out=false;p.place=null;p.outRound=null;p.mull=false}});
+  S.phase='sd';S.sdRound=1;S.queue=order;S.rOrder=order.slice();S.sdRes=res;S.sent=[];S.skipped=[];S.fell=[];S.note='';resetTimer();
+  S.popup={t:'Sudden Death begins',sub:'The boulder is at '+S.angle+'°, and every round is 5° steeper. Lives carry over and skips are off.',lists:[{h:'Back from elimination with 1 life',i:names(res)},{h:'Climbing order',i:names(order)}]};
+}
+function nextSD(){
+  var el=elimThis(),d=S.sdRound;
+  closeRound();S.queue=S.sent.filter(function(id){return !P(id).out});S.rOrder=S.queue.slice();S.sent=[];S.angle+=5;S.sdRound++;resetTimer();
+  S.popup={t:'Sudden Death round '+d+' complete',sub:'Round '+S.sdRound+' is at '+S.angle+'°.',lists:[{h:'Eliminated this round',i:el},{h:'Climbing order',i:names(S.queue)}]};
+}
+function after(){
+  if(S.phase==='round'&&!S.queue.length){
+    if(active().length<=3||S.round>=S.total)startSD();
+    else{var el=elimThis(),d=S.round;closeRound();S.queue=S.sent.concat(S.skipped).filter(function(id){return !P(id).out});S.rOrder=S.queue.slice();S.sent=[];S.skipped=[];S.round++;resetTimer();S.popup={t:'Round '+d+' complete',sub:'Round '+S.round+' is next, on the '+g(S.round)+'. Take one minute to observe before the first climber starts.',lists:[{h:'Eliminated this round',i:el},{h:'Climbing order',i:names(S.queue)}]}}
+  }else if(S.phase==='sd'&&!S.queue.length)nextSD();
+}
+function doAct(a){
+  var id=S.queue[0];if(id===undefined)return;var p=P(id);snap();
+  if(a==='sent'){S.queue.shift();S.sent.push(id);S.ev.push(['S',id])}
+  else if(a==='skip'){if(!p.mull||S.phase!=='round')return;p.mull=false;S.queue.shift();S.skipped.push(id);S.ev.push(['M',id])}
+  else if(a==='fell'){
+    S.queue.shift();p.lives--;S.ev.push(['F',id,Math.max(p.lives,0)]);if(p.lives<=0){eliminate(p);S.ev.push(['E',id,p.place])}else S.queue.push(id);
+  }
+  S.flash={t:Date.now(),k:a==='fell'?(p.out?'out':'fell'):a,name:p.name,lives:Math.max(p.lives,0),place:p.place};
+  if(S.phase==='sd'&&active().length===1){
+    var w=active()[0],el=elimThis();closeRound();w.place=1;S.phase='done';S.queue=[];S.sent=[];
+    S.popup={t:'We have a winner',sub:w.name+' is the last climber standing.',lists:[{h:'Eliminated this round',i:el}]};return;
+  }
+  if(S.phase==='round'&&active().length<=3){startSD();return}
+  after();
+}
+
+var LINK={peer:null,conns:[],code:null,status:'Starting display link'};
+function linkCode(){var c=null;try{c=localStorage.getItem('botb-code')}catch(e){}if(!c||c.length!==4){var A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';c='';for(var i=0;i<4;i++)c+=A[Math.floor(Math.random()*A.length)];try{localStorage.setItem('botb-code',c)}catch(e){}}return c}
+function liveCount(){LINK.conns=LINK.conns.filter(function(c){return c.open});return LINK.conns.length}
+function linkLabel(){var n=liveCount();return n?(n>1?n+' displays connected':'Display connected'):LINK.status}
+function refreshLink(){var el=document.getElementById('linkst');if(el)el.textContent=linkLabel()}
+function linkStatus(t){LINK.status=t;refreshLink()}
+function payload(){return {type:'state',s:{phase:S.phase,round:S.round,total:S.total,angle:S.angle,sdRound:S.sdRound,players:S.players,queue:S.queue,sent:S.sent,skipped:S.skipped,popup:S.popup||null,flash:S.flash||null},timer:{run:!!tInt&&tLeft>0,left:tLeft}}}
+function broadcast(){if(!liveCount())return;var m=payload();LINK.conns.forEach(function(c){try{c.send(m)}catch(e){}})}
+function startLink(){
+  if(!window.Peer){linkStatus('Display link unavailable. Check the internet connection and reload.');return}
+  var p;try{p=new Peer('botb-'+LINK.code,{debug:0})}catch(e){linkStatus('Display link unavailable on this browser.');return}
+  LINK.peer=p;
+  p.on('open',function(){linkStatus('Waiting for a display')});
+  p.on('connection',function(c){
+    c.on('open',function(){LINK.conns.push(c);try{c.send(payload())}catch(e){}refreshLink()});
+    c.on('data',function(m){if(m&&m.type==='hello')try{c.send(payload())}catch(e){}});
+    c.on('close',function(){setTimeout(refreshLink,50)});
+    c.on('error',function(){setTimeout(refreshLink,50)});
+  });
+  p.on('disconnected',function(){linkStatus('Display link dropped, reconnecting');setTimeout(function(){if(!p.destroyed)try{p.reconnect()}catch(e){}},2000)});
+  p.on('error',function(e){var t=e&&e.type;if(t==='peer-unavailable')return;
+    linkStatus(t==='unavailable-id'?'Reclaiming display code':'Display link problem, retrying');
+    if(t==='unavailable-id'||t==='network'||t==='server-error'||t==='socket-error'||t==='socket-closed'||t==='browser-incompatible'){try{p.destroy()}catch(x){}setTimeout(startLink,4000)}});
+}
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&LINK.peer&&LINK.peer.disconnected&&!LINK.peer.destroyed)try{LINK.peer.reconnect()}catch(e){}});
+function count(){var n=S.names.split('\n').filter(function(x){return x.trim()}).length;return n+(n===1?' participant':' participants')}
+function drawNames(noShuffle){
+  var n=S.names.split('\n').map(function(x){return x.trim()}).filter(Boolean);
+  S.players=(noShuffle?n:shuffle(n)).map(function(nm,i){return {id:i,name:nm,lives:3,mull:true,out:false,place:null,outRound:null}});
+  S.queue=S.players.map(function(p){return p.id});S.rOrder=S.queue.slice();S.ev=[];S.log=[];
+}
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-a]');if(!b)return;var a=b.getAttribute('data-a');
+  if(a==='draw')drawNames();
+  else if(a==='startorder'){drawNames(true);if(S.players.length<2)return;snap();S.phase='round';S.round=1;resetTimer()}
+  else if(a==='start'){if(S.players.length<2)return;snap();S.phase='round';S.round=1;resetTimer()}
+  else if(a==='sent'||a==='fell'||a==='skip')doAct(a);
+  else if(a==='sd'){snap();startSD()}
+  else if(a==='undo'){if(hist.length)S=Object.assign(init(),JSON.parse(hist.pop()))}
+  else if(a==='pdf'){exportPdf();return}
+  else if(a==='dismiss')S.popup=null;
+  else if(a==='timer'){startTimer();save();return}
+  else if(a==='reset'){if(!armed){armed=true;render();return}var n=S.names;S=init();S.names=n;hist=[];resetTimer()}
+  if(a!=='reset')armed=false;
+  save();render();
+});
+document.addEventListener('input',function(e){
+  var id=e.target.id;
+  if(id==='names'){S.names=e.target.value;var c=document.getElementById('cnt');if(c)c.textContent=count()}
+  else if(id==='total'){S.total=Math.max(1,parseInt(e.target.value)||1);var gs=document.getElementById('grades');if(gs)gs.textContent=grades()}
+  else if(id==='angle')S.angle=parseInt(e.target.value)||35;
+  save();
+});
+
+document.addEventListener('change',function(e){if(e.target.id==='angle'){S.angle=Math.max(0,Math.round((parseInt(e.target.value)||35)/5)*5);e.target.value=S.angle;save()}});
+function hearts(p){var m=3;return '<span class="heart" aria-label="'+p.lives+' lives">'+'♥'.repeat(Math.max(p.lives,0))+'♡'.repeat(Math.max(m-p.lives,0))+'</span>'}
+function status(p){
+  if(p.out)return 'Out, prize place '+p.place;
+  if(S.phase==='done'&&p.place===1)return 'Winner';
+  var i=S.queue.indexOf(p.id);
+  if(i===0)return 'Climbing now';if(i>0)return 'In line ('+i+' ahead)';
+  if(S.sent.indexOf(p.id)>-1)return 'Sent';if(S.skipped.indexOf(p.id)>-1)return 'Used skip';
+  if(S.fell.indexOf(p.id)>-1)return 'Fell';return 'Waiting';
+}
+function roster(){
+  var act=uniq(S.queue.concat(S.sent,S.skipped,S.fell)).map(P).filter(Boolean);
+  var out=S.players.filter(function(p){return p.out}).sort(function(a,b){return a.place-b.place});
+  var rows=S.phase==='done'?S.players.slice().sort(function(a,b){return a.place-b.place}):act.concat(out);
+  var h='<div class="scroll"><table><thead><tr><th>Name</th><th>Lives</th><th>Skip</th><th>Status</th></tr></thead><tbody>';
+  rows.forEach(function(p){
+    var m=S.phase==='sd'||S.phase==='done'?'<span class="tag used">n/a</span>':(p.mull?'<span class="tag">Available</span>':'<span class="tag used">Used</span>');
+    h+='<tr class="'+(p.out?'out':(S.queue[0]===p.id?'cur':''))+'"><td>'+esc(p.name)+'</td><td>'+hearts(p)+'</td><td>'+m+'</td><td>'+status(p)+'</td></tr>';
+  });
+  return h+'</tbody></table></div>';
+}
+function head(){
+  return '<div class="top"><div><h1>Battle of the Board</h1><p class="sub">Tension Board 2 competition, hosted by Rock Revolution</p><p class="sub link">Display code <b class="code">'+esc(LINK.code||'')+'</b> <span id="linkst">'+linkLabel()+'</span></p></div><div class="row"><button data-a="undo"'+(hist.length?'':' disabled')+'>Undo</button><button data-a="reset">'+(armed?'Confirm reset':'Reset')+'</button></div></div>';
+}
+function modal(){
+  var p=S.popup,h='<div class="ov"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt"><h2 id="mt">'+esc(p.t)+'</h2><p>'+esc(p.sub)+'</p>';
+  p.lists.forEach(function(l){if(l.i.length)h+='<div class="sub">'+l.h+'</div><ol>'+l.i.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ol>'});
+  return h+'<div class="acts"><button id="dm" class="b-go" data-a="dismiss">Continue</button></div></div></div>';
+}
+function render(){
+  var h=head(),n=active().length;
+  if(S.phase==='setup'){
+    h+='<h2>Set up the competition</h2><div class="panel"><label for="names" class="sub">One competitor per line</label><textarea id="names" placeholder="Alex&#10;Sam&#10;Jordan">'+esc(S.names)+'</textarea><p class="sub" id="cnt" style="margin:8px 0 0;font-weight:600">'+count()+'</p>'+
+    '<div class="row" style="margin-top:12px"><label>Number of boulders (<span id="grades">'+grades()+'</span>)<input id="total" type="number" min="1" value="'+S.total+'"></label><label>Sudden Death starting angle (5° steps)<input id="angle" type="number" step="5" min="0" value="'+S.angle+'"></label></div>'+
+    '<div class="acts"><button class="b-hand" data-a="draw">Draw from the hat</button><button class="b-go" data-a="start"'+(S.players.length>=2?'':' disabled')+'>Start round 1</button><button data-a="startorder">Start with my order</button></div></div>';
+    if(S.players.length){h+='<h2>Climbing order ('+S.players.length+')</h2><div class="panel"><ol class="draw">'+S.players.map(function(p){return '<li>'+esc(p.name)+'</li>'}).join('')+'</ol><p class="sub">Editing the names above? Draw again to refresh the order.</p></div>'}
+  }else{
+    var cur=P(S.queue[0]),sd=S.phase==='sd';
+    var title=S.phase==='done'?'Final standings':(sd?'Sudden Death, round '+S.sdRound+' at '+S.angle+'°':'Round '+S.round+' of '+S.total+': '+g(S.round));
+    h+='<h2>'+title+'</h2><div class="stats"><span><b>'+n+'</b> still alive</span><span><b>'+S.sent.length+'</b> sent</span><span><b>'+S.queue.length+'</b> still to climb</span></div>';
+    if(S.note)h+='<p class="note">'+esc(S.note)+'</p>';
+    if(S.phase==='round'&&n<=3)h+='<div class="banner"><span><b>Only '+n+' climbers left.</b> Move straight to Sudden Death.</span><button class="b-mull" data-a="sd">Start Sudden Death</button></div>';
+    if(S.phase==='done'){var w=S.players.filter(function(p){return p.place===1})[0];h+='<div class="panel now"><div class="sub">Winner</div><div class="win">'+esc(w?w.name:'')+'</div></div><div class="acts"><button class="b-hand" data-a="pdf">Export results PDF</button></div><p class="sub" id="pdfmsg"></p>'}
+    else if(cur){
+      h+='<div class="panel now"><div class="sub">'+(sd?'Up now':'Up now, begin immediately')+'</div><div class="name">'+esc(cur.name)+'</div><div>'+hearts(cur)+(sd?'':'  &nbsp;Skip '+(cur.mull?'available':'used'))+'</div>'+
+      '<div class="acts"><button class="b-go" data-a="sent">Sent it</button><button class="b-fall" data-a="fell">'+'Fell, lose a life'+'</button>'+(sd?'':'<button class="b-mull" data-a="skip"'+(cur.mull?'':' disabled')+'>Use skip</button>')+'</div></div>';
+      var nx=S.queue.slice(1,4).map(function(id){return esc(P(id).name)});
+      if(nx.length)h+='<p class="sub">Next: '+nx.join(', ')+'</p>';
+      h+='<div class="row" style="margin-top:8px"><button data-a="timer">Start 1 minute observation</button><span class="timer" id="tm">'+(tInt||tLeft<60?(tLeft>0?fmt(tLeft):'Climb!'):'1:00')+'</span></div>';
+    }
+    h+='<h2>Climbers</h2><div class="panel">'+roster()+'</div>';
+  }
+  if(S.popup)h+=modal();
+  document.getElementById('app').innerHTML=h;
+  var dm=document.getElementById('dm');if(dm)dm.focus();
+}
+LINK.code=linkCode();
+render();
+startLink();
+</script>
+</body>
+</html>

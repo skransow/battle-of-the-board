@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Battle of the Board Live</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#101317;--panel:#1a1f25;--ink:#f2f0ec;--mute:#8d949d;--line:#2c333b;--go:#2fcf8a;--fall:#ff5a4f;--mull:#ffb43c;--hand:#3cc4ef}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:600 16px/1.3 Barlow,system-ui,sans-serif;overflow:hidden}
+.cond{font-family:"Barlow Condensed","Arial Narrow",sans-serif}
+#stage{height:100vh;display:grid;grid-template-rows:auto 1fr auto;gap:2vh;padding:3vh 3vw}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:2vw;border-bottom:2px solid var(--line);padding-bottom:1.6vh}
+.brand{font:800 clamp(28px,4.2vw,72px)/.9 "Barlow Condensed",sans-serif;letter-spacing:.01em}
+.host{color:var(--mute);font-size:clamp(13px,1.3vw,22px);margin-top:.6vh}
+.round{text-align:right}
+.round .t{font:700 clamp(22px,2.6vw,46px)/1 "Barlow Condensed",sans-serif}
+.round .g{display:inline-block;margin-left:.6vw;padding:.2vh .8vw;border-radius:8px;background:var(--hand);color:#0c1014;font:800 clamp(22px,2.6vw,46px)/1.1 "Barlow Condensed",sans-serif}
+.round .g.sd{background:var(--fall)}
+.round .s{color:var(--mute);font-size:clamp(13px,1.3vw,22px);margin-top:.6vh}
+.main{display:grid;grid-template-columns:1.7fr 1fr;gap:2.4vw;min-height:0}
+.now{background:var(--panel);border-radius:18px;border-left:1.2vw solid var(--hand);padding:3vh 3vw;display:flex;flex-direction:column;justify-content:center;min-width:0}
+.lab{color:var(--mute);font-size:clamp(14px,1.5vw,26px)}
+.who{font:800 clamp(48px,8.5vw,170px)/.92 "Barlow Condensed",sans-serif;margin:1vh 0 2.4vh;overflow-wrap:anywhere}
+.hearts{font-size:clamp(34px,5vw,96px);line-height:1;color:var(--fall);letter-spacing:.08em}
+.hearts .e{color:var(--line)}
+.meta{display:flex;align-items:center;gap:2vw;flex-wrap:wrap;margin-top:2vh}
+.pill{padding:.6vh 1.2vw;border-radius:99px;font-size:clamp(14px,1.6vw,28px);background:var(--mull);color:#1a1205}
+.pill.off{background:var(--line);color:var(--mute);text-decoration:line-through}
+.timer{font:800 clamp(30px,4vw,76px)/1 "Barlow Condensed",sans-serif;font-variant-numeric:tabular-nums;color:var(--mull)}
+.side{background:var(--panel);border-radius:18px;padding:3vh 2vw;min-height:0;overflow:hidden}
+.side h2{margin:0 0 1.4vh;font:700 clamp(18px,2vw,36px) "Barlow Condensed",sans-serif;color:var(--mute)}
+.next{list-style:none;margin:0;padding:0}
+.next li{display:flex;justify-content:space-between;align-items:center;gap:1vw;padding:1.1vh 0;border-bottom:1px solid var(--line);font-size:clamp(16px,2vw,36px)}
+.next li .n{color:var(--mute);width:2.2em;flex:none}
+.next li .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.next li .h{color:var(--fall);font-size:.8em;letter-spacing:.05em;flex:none}
+.next li:first-child{color:var(--hand)}
+footer{display:flex;gap:3vw;align-items:center;color:var(--mute);font-size:clamp(14px,1.5vw,26px);min-height:3vh;padding-right:min(380px,34vw)}
+footer b{color:var(--ink)}
+footer .chips{display:flex;gap:.6vw;flex-wrap:wrap;flex:1;min-width:0;overflow:hidden;max-height:4.6em}
+footer .chip{background:color-mix(in srgb,var(--go) 22%,transparent);color:var(--go);padding:.3vh .9vw;border-radius:8px}
+.center{grid-row:2;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2vh}
+.big{font:800 clamp(56px,10vw,200px)/.9 "Barlow Condensed",sans-serif}
+.order{columns:4;column-gap:3vw;text-align:left;font-size:clamp(14px,1.6vw,28px);margin:0;padding-left:2.2em;max-width:92vw}
+.order li{padding:.3vh 0;break-inside:avoid}
+.podium{display:flex;gap:3vw;align-items:flex-end;justify-content:center}
+.podium div{text-align:center}
+.podium .pl{color:var(--mute);font-size:clamp(14px,1.6vw,28px)}
+.podium .pn{font:800 clamp(28px,3.6vw,68px)/1 "Barlow Condensed",sans-serif}
+.podium .p1 .pn{font-size:clamp(56px,9vw,180px);color:var(--mull)}
+/* flash */
+#flash{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;z-index:30;padding:4vw}
+#flash.on{display:flex;animation:pop .35s ease-out}
+#flash .word{font:800 clamp(90px,19vw,380px)/.85 "Barlow Condensed",sans-serif;letter-spacing:.01em}
+#flash .fn{font:800 clamp(36px,6vw,120px)/1 "Barlow Condensed",sans-serif;margin-bottom:2vh;overflow-wrap:anywhere}
+#flash .fs{font-size:clamp(22px,3vw,56px);margin-top:2.4vh;font-weight:600}
+#flash.sent{background:var(--go);color:#062316}
+#flash.fell{background:var(--fall);color:#2a0705}
+#flash.out{background:#7d1610;color:#fff}
+#flash.skip{background:var(--mull);color:#2b1a02}
+@keyframes pop{from{transform:scale(1.08);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){#flash.on{animation:none}}
+/* round popup */
+#pop{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(6,8,10,.82);z-index:20;padding:4vh 4vw}
+#pop.on{display:flex}
+#pop .box{background:var(--panel);border:2px solid var(--hand);border-radius:20px;padding:4vh 4vw;max-width:90vw;max-height:90vh;overflow:hidden;width:min(1400px,90vw)}
+#pop h1{margin:0;font:800 clamp(40px,6vw,120px)/.95 "Barlow Condensed",sans-serif}
+#pop p{font-size:clamp(18px,2vw,36px);color:var(--mute);margin:1.4vh 0 3vh}
+#pop .cols{display:flex;gap:4vw}
+#pop .cols>div{flex:1;min-width:0}
+#pop h3{margin:0 0 1vh;font:700 clamp(18px,2vw,34px) "Barlow Condensed",sans-serif;color:var(--hand)}
+#pop ol{margin:0;padding-left:1.8em;columns:2;column-gap:2vw;font-size:clamp(15px,1.6vw,30px)}
+#pop ol li{break-inside:avoid;padding:.2vh 0}
+/* connect + status */
+#connect{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:var(--bg);z-index:40;padding:24px}
+#connect.on{display:flex}
+#connect form{text-align:center;max-width:560px;width:100%}
+#connect h1{font:800 clamp(40px,6vw,96px)/.95 "Barlow Condensed",sans-serif;margin:0 0 12px}
+#connect p{color:var(--mute);font-size:20px;margin:0 0 24px}
+#connect input{width:100%;font:800 64px "Barlow Condensed",sans-serif;letter-spacing:.3em;text-align:center;text-transform:uppercase;background:var(--panel);color:var(--ink);border:2px solid var(--line);border-radius:14px;padding:10px 0 10px .3em}
+#connect button{margin-top:18px;width:100%;font:700 24px Barlow,sans-serif;background:var(--hand);color:#0c1014;border:0;border-radius:12px;padding:14px;cursor:pointer}
+input:focus-visible,button:focus-visible{outline:3px solid var(--mull);outline-offset:3px}
+#bar{position:fixed;right:14px;bottom:12px;display:flex;gap:10px;align-items:center;font-size:14px;color:var(--mute);z-index:35;opacity:.55;transition:opacity .2s}
+#bar:hover,#bar:focus-within{opacity:1}
+#bar button{font:600 13px Barlow,sans-serif;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--fall);display:inline-block}
+.dot.live{background:var(--go)}
+</style>
+<script src="vendor/peerjs.min.js"></script>
+</head>
+<body>
+<main id="stage"></main>
+<div id="pop" role="dialog" aria-live="polite"></div>
+<div id="flash" aria-live="assertive"></div>
+<div id="connect">
+  <form id="cf">
+    <h1>Battle of the Board</h1>
+    <p>Enter the 4-character display code shown at the top of the tracker on the iPad.</p>
+    <label for="ci" style="position:absolute;left:-9999px">Display code</label>
+    <input id="ci" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false">
+    <button type="submit">Connect display</button>
+  </form>
+</div>
+<div id="bar"><span class="dot" id="dot"></span><span id="st">Not connected</span><button id="chg">Change code</button><button id="fs">Full screen</button></div>
+<script>
+var code=null,peer=null,conn=null,last=null,seen=0,first=true,flashUntil=0,tEnd=0,retry=null,flashT=null;
+try{code=localStorage.getItem('botb-display-code')}catch(e){}
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function g(n){return 'V'+(n+3)}
+function status(t,live){$('st').textContent=t;$('dot').className='dot'+(live?' live':'')}
+
+/* ---------- link ---------- */
+function later(ms){clearTimeout(retry);retry=setTimeout(connect,ms||3000)}
+function connect(){
+  clearTimeout(retry);
+  if(!code){showConnect();return}
+  if(!window.Peer){status('Link library failed to load. Check the internet connection and reload.');return}
+  if(!peer||peer.destroyed){
+    try{peer=new Peer({debug:0})}catch(e){status('This browser cannot run the display link.');return}
+    peer.on('open',dial);
+    peer.on('disconnected',function(){status('Link dropped, reconnecting');setTimeout(function(){if(peer&&!peer.destroyed)try{peer.reconnect()}catch(e){}},2000)});
+    peer.on('error',function(e){var t=e&&e.type;
+      if(t==='peer-unavailable'){status('No tracker found for code '+code+'. Is the tracker open on the iPad? Retrying');later(4000)}
+      else{status('Link problem, retrying');try{peer.destroy()}catch(x){}later(4000)}});
+    status('Connecting to '+code);
+  }else if(peer.open)dial();
+}
+function dial(){
+  if(conn)try{conn.close()}catch(e){}
+  status('Connecting to '+code);
+  var c=peer.connect('botb-'+code,{reliable:true});conn=c;
+  c.on('open',function(){status('Live, code '+code,true);try{c.send({type:'hello'})}catch(e){}});
+  c.on('data',onData);
+  c.on('close',function(){if(conn!==c)return;status('Connection lost, reconnecting');later(2500)});
+  c.on('error',function(){if(conn!==c)return;later(3000)});
+}
+function onData(m){
+  if(!m||m.type!=='state')return;
+  var s=m.s;
+  if(s.flash&&s.flash.t>seen){if(!first)doFlash(s.flash);seen=s.flash.t}
+  first=false;
+  tEnd=m.timer&&m.timer.run?Date.now()+m.timer.left*1000:0;
+  last=s;render();
+}
+function showConnect(){$('connect').className='on';$('ci').value=code||'';setTimeout(function(){$('ci').focus()},50)}
+$('cf').addEventListener('submit',function(e){e.preventDefault();var v=$('ci').value.trim().toUpperCase();if(v.length!==4)return;code=v;try{localStorage.setItem('botb-display-code',v)}catch(x){}$('connect').className='';first=true;connect()});
+$('chg').addEventListener('click',function(){showConnect()});
+$('fs').addEventListener('click',function(){var d=document.documentElement;if(document.fullscreenElement)document.exitFullscreen();else if(d.requestFullscreen)d.requestFullscreen()});
+/* watchdog: if the channel silently died, redial */
+setInterval(function(){if(code&&peer&&peer.open&&(!conn||!conn.open))dial()},10000);
+
+/* ---------- flash ---------- */
+function doFlash(f){
+  var el=$('flash'),word,sub='';
+  if(f.k==='sent'){word='SENT!';sub='On to the next boulder'}
+  else if(f.k==='skip'){word='SKIP';sub='Skip used on this boulder'}
+  else if(f.k==='out'){word='ELIMINATED';sub=f.place?'Prize place '+f.place:''}
+  else{word='FELL';sub=f.lives+(f.lives===1?' life':' lives')+' left, back of the line'}
+  el.className='';void el.offsetWidth;
+  el.innerHTML='<div class="fn">'+esc(f.name)+'</div><div class="word">'+word+'</div>'+(sub?'<div class="fs">'+esc(sub)+'</div>':'');
+  el.className='on '+(f.k==='skip'?'skip':f.k);
+  flashUntil=Date.now()+2600;
+  clearTimeout(flashT);flashT=setTimeout(function(){el.className='';render()},2600);
+  render();
+}
+
+/* ---------- render ---------- */
+function P(id){return last.players.filter(function(p){return p.id===id})[0]}
+function hearts(n){n=Math.max(n,0);return '♥'.repeat(n)+'<span class="e">'+'♥'.repeat(Math.max(3-n,0))+'</span>'}
+function alive(){return last.players.filter(function(p){return !p.out})}
+function head(){
+  var s=last,t='',gr='',sub='';
+  if(s.phase==='setup'){t='Starting soon'}
+  else if(s.phase==='round'){t='Round '+s.round+' of '+s.total;gr='<span class="g">'+g(s.round)+'</span>';sub=alive().length+' climbers still in'}
+  else if(s.phase==='sd'){t='Sudden Death, round '+s.sdRound;gr='<span class="g sd">'+s.angle+'°</span>';sub=alive().length+' climbers still in, no skips'}
+  else{t='Final results'}
+  return '<header><div><div class="brand">Battle of the Board</div><div class="host">Tension Board 2, hosted by Rock Revolution</div></div><div class="round"><div class="t">'+t+gr+'</div>'+(sub?'<div class="s">'+sub+'</div>':'')+'</div></header>';
+}
+function render(){
+  var st=$('stage');
+  if(!last){
+    st.innerHTML='<header><div><div class="brand">Battle of the Board</div><div class="host">Tension Board 2, hosted by Rock Revolution</div></div></header><div class="center"><div class="big">Stand by</div><div class="lab">Waiting for the tracker</div></div><footer></footer>';
+    $('pop').className='';return;
+  }
+  var s=last,h=head();
+  if(s.phase==='setup'){
+    h+='<div class="center"><div class="big">Starting soon</div>';
+    if(s.players.length)h+='<div class="lab">'+s.players.length+' climbers in the draw</div><ol class="order">'+s.players.map(function(p){return '<li>'+esc(p.name)+'</li>'}).join('')+'</ol>';
+    h+='</div><footer></footer>';
+  }else if(s.phase==='done'){
+    var by={};s.players.forEach(function(p){by[p.place]=p});
+    function pd(n,c){var p=by[n];return p?'<div class="'+c+'"><div class="pl">'+(n===1?'Champion':n===2?'2nd place':'3rd place')+'</div><div class="pn">'+esc(p.name)+'</div></div>':''}
+    h+='<div class="center"><div class="podium">'+pd(2,'p2')+pd(1,'p1')+pd(3,'p3')+'</div></div><footer>'+s.players.length+' climbers competed</footer>';
+  }else{
+    var cur=P(s.queue[0]),sd=s.phase==='sd';
+    h+='<div class="main"><section class="now">';
+    if(cur){
+      h+='<div class="lab">Now climbing</div><div class="who">'+esc(cur.name)+'</div><div class="hearts" aria-label="'+cur.lives+' lives">'+hearts(cur.lives)+'</div><div class="meta">';
+      if(!sd)h+='<span class="pill'+(cur.mull?'':' off')+'">'+(cur.mull?'Skip available':'Skip used')+'</span>';
+      h+='<span class="timer" id="tm"></span></div>';
+    }else h+='<div class="lab">Between turns</div><div class="who">Stand by</div>';
+    h+='</section><section class="side"><h2>Up next</h2><ul class="next">';
+    var nx=s.queue.slice(1,9);
+    if(!nx.length)h+='<li><span class="nm" style="color:var(--mute)">No one else in line</span></li>';
+    nx.forEach(function(id,i){var p=P(id);h+='<li><span class="n">'+(i+1)+'</span><span class="nm">'+esc(p.name)+'</span><span class="h">'+'♥'.repeat(Math.max(p.lives,0))+'</span></li>'});
+    if(s.queue.length>9)h+='<li><span class="nm" style="color:var(--mute)">+'+(s.queue.length-9)+' more</span></li>';
+    h+='</ul></section></div>';
+    var out=s.players.filter(function(p){return p.out}).length;
+    h+='<footer><span>Sent <b>'+s.sent.length+'</b></span><div class="chips">'+s.sent.map(function(id){return '<span class="chip">'+esc(P(id).name)+'</span>'}).join('')+'</div><span>Eliminated <b>'+out+'</b></span></footer>';
+  }
+  st.innerHTML=h;tick();
+  var pop=$('pop');
+  if(s.popup&&Date.now()>=flashUntil){
+    var b='<div class="box"><h1>'+esc(s.popup.t)+'</h1><p>'+esc(s.popup.sub)+'</p><div class="cols">';
+    s.popup.lists.forEach(function(l){if(l.i.length)b+='<div><h3>'+esc(l.h)+'</h3><ol>'+l.i.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ol></div>'});
+    pop.innerHTML=b+'</div></div>';pop.className='on';
+  }else pop.className='';
+}
+function tick(){var el=$('tm');if(!el)return;var l=Math.ceil((tEnd-Date.now())/1000);el.textContent=tEnd&&l>0?'Observe '+Math.floor(l/60)+':'+String(l%60).padStart(2,'0'):''}
+setInterval(tick,250);
+
+render();
+if(code)connect();else showConnect();
+</script>
+</body>
+</html>
