@@ -97,7 +97,7 @@ a{color:var(--red)}
 <main id="app"></main>
 <script>
 var KEY='tb2-tracker';
-function init(){return {phase:'setup',round:1,total:7,angle:35,obsLen:60,obs:null,sdRound:0,names:'',players:[],queue:[],sent:[],skipped:[],fell:[],note:'',ev:[],log:[],rOrder:[],sdRes:[]}}
+function init(){return {phase:'setup',round:1,total:7,angle:35,obsLen:60,obs:null,sdRound:0,names:'',players:[],queue:[],sent:[],skipped:[],fell:[],note:'',ev:[],log:[],rOrder:[],sdRes:[],sdBonus:[]}}
 var S=init(),hist=[],armed=false;
 try{var r=JSON.parse(localStorage.getItem(KEY));if(r&&r.S){S=Object.assign(init(),r.S);hist=r.hist||[]}}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify({S:S,hist:hist}))}catch(e){}broadcast()}
@@ -124,7 +124,7 @@ function names(ids){return ids.map(function(id){return P(id).name})}
 function elimThis(){return S.players.filter(function(p){return p.out&&p.outRound===tag()}).sort(function(a,b){return b.place-a.place}).map(function(p){return p.name+' (prize place '+p.place+')'})}
 function uniq(a){return a.filter(function(x,i){return a.indexOf(x)===i})}
 
-function closeRound(){S.log.push({t:S.phase==='sd'?'sd':'main',n:S.phase==='sd'?S.sdRound:S.round,angle:S.angle,order:S.rOrder.slice(),ev:S.ev.slice(),res:(S.phase==='sd'&&S.sdRound===1)?S.sdRes.slice():[]});S.ev=[]}
+function closeRound(){S.log.push({t:S.phase==='sd'?'sd':'main',n:S.phase==='sd'?S.sdRound:S.round,angle:S.angle,order:S.rOrder.slice(),ev:S.ev.slice(),res:(S.phase==='sd'&&S.sdRound===1)?S.sdRes.slice():[],bonus:(S.phase==='sd'&&S.sdRound===1)?(S.sdBonus||[]).slice():[]});S.ev=[]}
 async function exportPdf(){
   var msg=document.getElementById('pdfmsg');
   function say(t){if(msg)msg.textContent=t}
@@ -152,6 +152,7 @@ async function exportPdf(){
   S.log.forEach(function(r){
     var lab=r.t==='sd'?'Sudden Death round '+r.n+' ('+r.angle+' degrees)':'Round '+r.n;
     r.res.forEach(function(id){lives[id]=1;alive[id]=1});
+    (r.bonus||[]).forEach(function(id){lives[id]=(lives[id]||0)+1});
     var info={},k=0,el=0;
     r.order.forEach(function(id){info[id]={f:0,r:'Did not climb before the round ended'}});
     r.ev.forEach(function(e){var o=info[e[1]];if(!o)return;
@@ -164,6 +165,7 @@ async function exportPdf(){
     head(lab);
     var note=k+' sent  |  '+el+' eliminated  |  '+Object.keys(alive).length+' remaining';
     if(r.res.length)note+='  |  Returned with 1 life: '+r.res.map(function(id){return P(id).name}).join(', ');
+    if(r.bonus&&r.bonus.length)note+='  |  Bonus life: '+r.bonus.map(function(id){return P(id).name}).join(', ');
     doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(90,90,90);
     var ln=doc.splitTextToSize(note,W-2*M);doc.text(ln,M,y+4);y+=ln.length*12+8;
     table(['Start #','Climber','Falls','Lives left','Result'],r.order.map(function(id,i){var o=info[id];return [i+1,P(id).name,o.f,lives[id],o.r]}));
@@ -178,11 +180,17 @@ async function exportPdf(){
 }
 function startSD(){
   closeRound();
-  var res=S.players.filter(function(p){return p.out&&p.outRound===S.round}).map(function(p){return p.id});
-  var order=uniq(S.sent.concat(S.queue,S.skipped,res));S.angle=Math.max(0,Math.round(S.angle/5)*5);
-  S.players.forEach(function(p){if(order.indexOf(p.id)>-1){if(p.out)p.lives=1;p.out=false;p.place=null;p.outRound=null;p.mull=false}});
-  S.phase='sd';S.sdRound=1;S.queue=order;S.rOrder=order.slice();S.sdRes=res;S.sent=[];S.skipped=[];S.fell=[];S.note='';resetTimer();
-  S.popup={t:'Sudden Death begins',sub:'The boulder is at '+S.angle+'°, and every round is 5° steeper. Lives carry over and skips are off.',lists:[{h:'Back from elimination with 1 life',i:names(res)},{h:'Climbing order',i:names(order)}]};
+  // Resurrect only if fewer than 3 climbers survived the boulder that triggered Sudden Death
+  var res=active().length<3?S.players.filter(function(p){return p.out&&p.outRound===S.round}).map(function(p){return p.id}):[];
+  // Bonus life only for climbers who actually sent that boulder (not skips)
+  var bonus=S.sent.filter(function(id){return !P(id).out});
+  var order=uniq(S.sent.concat(S.queue,S.skipped,res)).filter(function(id){return !P(id).out||res.indexOf(id)>-1});
+  S.angle=Math.max(0,Math.round(S.angle/5)*5);
+  bonus.forEach(function(id){P(id).lives++});
+  S.players.forEach(function(p){if(order.indexOf(p.id)>-1){if(p.out){p.lives=1;p.out=false;p.place=null;p.outRound=null}p.mull=false}});
+  S.phase='sd';S.sdRound=1;S.queue=order;S.rOrder=order.slice();S.sdRes=res;S.sdBonus=bonus;S.sent=[];S.skipped=[];S.fell=[];S.note='';resetTimer();
+  if(order.length===1){var w=P(order[0]);w.place=1;S.phase='done';S.queue=[];S.obs={st:'done',left:0};S.popup={t:'We have a winner',sub:w.name+' is the last climber standing.',lists:[]};return}
+  S.popup={t:'Sudden Death begins',sub:'The board is at '+S.angle+'° and gets 5° steeper every round. No skips.',lists:[{h:'Sent the last boulder: +1 bonus life',i:names(bonus)},{h:'Back from elimination with 1 life',i:names(res)},{h:'Climbing order',i:names(order)}]};
 }
 function nextSD(){
   var el=elimThis(),d=S.sdRound;
@@ -207,7 +215,6 @@ function doAct(a){
     var w=active()[0],el=elimThis();closeRound();w.place=1;S.phase='done';S.queue=[];S.sent=[];
     S.popup={t:'We have a winner',sub:w.name+' is the last climber standing.',lists:[{h:'Eliminated this round',i:el}]};return;
   }
-  if(S.phase==='round'&&active().length<=3){startSD();return}
   after();
 }
 
@@ -320,7 +327,6 @@ function render(){
     var title=S.phase==='done'?'Final standings':(sd?'Sudden Death, round '+S.sdRound+' at '+S.angle+'°':'Round '+S.round+' of '+S.total);
     h+='<h2>'+title+'</h2><div class="stats"><span><b>'+n+'</b> still alive</span><span><b>'+S.sent.length+'</b> sent</span><span><b>'+S.queue.length+'</b> still to climb</span></div>';
     if(S.note)h+='<p class="note">'+esc(S.note)+'</p>';
-    if(S.phase==='round'&&n<=3)h+='<div class="banner"><span><b>Only '+n+' climbers left.</b> Move straight to Sudden Death.</span><button class="b-mull" data-a="sd">Start Sudden Death</button></div>';
     if(S.phase==='done'){var w=S.players.filter(function(p){return p.place===1})[0];h+='<div class="panel now"><div class="sub">Winner</div><div class="win">'+esc(w?w.name:'')+'</div></div><div class="acts"><button class="b-hand" data-a="pdf">Export results PDF</button></div><p class="sub" id="pdfmsg"></p>'}
     else if(cur){
       var ob=obsBlocked();
