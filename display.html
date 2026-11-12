@@ -68,11 +68,11 @@ footer .chip{border:2px solid var(--w);color:var(--w);padding:.1em .6em}
 #flash .word .rl{justify-content:center}
 #flash .fn{font:400 clamp(40px,6.5vw,130px)/1 Anton,Impact,sans-serif;margin-bottom:4vh;overflow-wrap:anywhere}
 #flash .fs{font-size:clamp(16px,2.2vw,42px);margin-top:4vh;letter-spacing:.04em}
-#flash.sent{background:radial-gradient(circle,rgba(0,0,0,.08) 0 1px,transparent 1.6px) 0 0/7px 7px,var(--w);color:var(--k)}
+#flash.sent{background:radial-gradient(circle,rgba(0,0,0,.1) 0 1px,transparent 1.6px) 0 0/7px 7px,#2fcf8a;color:#062316}
 #flash.fell{background:radial-gradient(circle,rgba(0,0,0,.12) 0 1px,transparent 1.6px) 0 0/7px 7px,var(--red);color:var(--k)}
 #flash.out{background:radial-gradient(circle,rgba(227,18,27,.25) 0 1.2px,transparent 1.8px) 0 0/7px 7px,var(--k);color:var(--w)}
 #flash.out .fs{color:var(--red)}
-#flash.skip{background:radial-gradient(circle,rgba(255,255,255,.08) 0 1px,transparent 1.6px) 0 0/7px 7px,#262626;color:var(--w)}
+#flash.skip{background:radial-gradient(circle,rgba(0,0,0,.1) 0 1px,transparent 1.6px) 0 0/7px 7px,#ffb43c;color:#2b1a02}
 /* round popup */
 #pop{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.84);z-index:20;padding:4vh 4vw}
 #pop.on{display:flex}
@@ -189,7 +189,7 @@ function doFlash(f){
   else if(f.k==='out'){word='ELIMINATED'}
   else{word='FELL';sub=f.lives+(f.lives===1?' life':' lives')+' left, back of the line'}
   el.className='';void el.offsetWidth;
-  var tc=f.k==='sent'?'blk':f.k==='out'?'red':f.k==='skip'?'wht':'wht';
+  var tc=f.k==='out'?'red':f.k==='fell'?'wht':'blk';
   el.innerHTML='<div class="fn">'+esc(f.name)+'</div><div class="word" style="font-size:'+Math.min(15,84/(word.length*0.74)).toFixed(2)+'vw">'+ransom([{w:word,c:tc}])+'</div>'+(sub?'<div class="fs">'+esc(sub)+'</div>':'');
   el.className='on '+(f.k==='skip'?'skip':f.k);
   flashUntil=Date.now()+2600;
