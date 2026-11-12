@@ -80,8 +80,6 @@ function tag(){return S.phase==='sd'?1000+S.sdRound:S.round}
 function eliminate(p){p.place=active().length;p.out=true;p.outRound=tag()}
 function names(ids){return ids.map(function(id){return P(id).name})}
 function elimThis(){return S.players.filter(function(p){return p.out&&p.outRound===tag()}).sort(function(a,b){return b.place-a.place}).map(function(p){return p.name+' (prize place '+p.place+')'})}
-function g(n){return 'V'+(n+3)}
-function grades(){return S.total>1?g(1)+' to '+g(S.total):g(1)}
 function uniq(a){return a.filter(function(x,i){return a.indexOf(x)===i})}
 
 function closeRound(){S.log.push({t:S.phase==='sd'?'sd':'main',n:S.phase==='sd'?S.sdRound:S.round,angle:S.angle,order:S.rOrder.slice(),ev:S.ev.slice(),res:(S.phase==='sd'&&S.sdRound===1)?S.sdRes.slice():[]});S.ev=[]}
@@ -98,7 +96,7 @@ async function exportPdf(){
   var win=S.players.filter(function(p){return p.place===1})[0],mainN=0,sdN=0,elimAt={},lives={},alive={},resSet=[];
   S.log.forEach(function(r){if(r.t==='sd'){sdN++;if(r.n===1)resSet=r.res}else mainN++});
   S.players.forEach(function(p){lives[p.id]=3;alive[p.id]=1});
-  S.log.forEach(function(r){var lab=r.t==='sd'?'Sudden Death round '+r.n:'Round '+r.n+' ('+g(r.n)+')';r.ev.forEach(function(e){if(e[0]==='E')elimAt[e[1]]=lab})});
+  S.log.forEach(function(r){var lab=r.t==='sd'?'Sudden Death round '+r.n:'Round '+r.n;r.ev.forEach(function(e){if(e[0]==='E')elimAt[e[1]]=lab})});
   var y=142;
   doc.setTextColor(28,31,36);doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text('Winner: '+(win?win.name:'-'),M,y);
   doc.setFont('helvetica','normal');doc.setFontSize(11);doc.text(S.players.length+' climbers  |  '+mainN+' rounds  |  '+sdN+' Sudden Death rounds',M,y+18);
@@ -111,7 +109,7 @@ async function exportPdf(){
   if(win)rows.push(['-',win.name,'1 (Winner)','Last climber standing']);
   table(['Out #','Climber','Prize place','Eliminated in'],rows);
   S.log.forEach(function(r){
-    var lab=r.t==='sd'?'Sudden Death round '+r.n+' ('+r.angle+' degrees)':'Round '+r.n+' ('+g(r.n)+')';
+    var lab=r.t==='sd'?'Sudden Death round '+r.n+' ('+r.angle+' degrees)':'Round '+r.n;
     r.res.forEach(function(id){lives[id]=1;alive[id]=1});
     var info={},k=0,el=0;
     r.order.forEach(function(id){info[id]={f:0,r:'Did not climb before the round ended'}});
@@ -152,7 +150,7 @@ function nextSD(){
 function after(){
   if(S.phase==='round'&&!S.queue.length){
     if(active().length<=3||S.round>=S.total)startSD();
-    else{var el=elimThis(),d=S.round;closeRound();S.queue=S.sent.concat(S.skipped).filter(function(id){return !P(id).out});S.rOrder=S.queue.slice();S.sent=[];S.skipped=[];S.round++;resetTimer();S.popup={t:'Round '+d+' complete',sub:'Round '+S.round+' is next, on the '+g(S.round)+'. Take one minute to observe before the first climber starts.',lists:[{h:'Eliminated this round',i:el},{h:'Climbing order',i:names(S.queue)}]}}
+    else{var el=elimThis(),d=S.round;closeRound();S.queue=S.sent.concat(S.skipped).filter(function(id){return !P(id).out});S.rOrder=S.queue.slice();S.sent=[];S.skipped=[];S.round++;resetTimer();S.popup={t:'Round '+d+' complete',sub:'Round '+S.round+' is next. Take one minute to observe before the first climber starts.',lists:[{h:'Eliminated this round',i:el},{h:'Climbing order',i:names(S.queue)}]}}
   }else if(S.phase==='sd'&&!S.queue.length)nextSD();
 }
 function doAct(a){
@@ -218,7 +216,7 @@ document.addEventListener('click',function(e){
 document.addEventListener('input',function(e){
   var id=e.target.id;
   if(id==='names'){S.names=e.target.value;var c=document.getElementById('cnt');if(c)c.textContent=count()}
-  else if(id==='total'){S.total=Math.max(1,parseInt(e.target.value)||1);var gs=document.getElementById('grades');if(gs)gs.textContent=grades()}
+  else if(id==='total')S.total=Math.max(1,parseInt(e.target.value)||1);
   else if(id==='angle')S.angle=parseInt(e.target.value)||35;
   save();
 });
@@ -256,12 +254,12 @@ function render(){
   var h=head(),n=active().length;
   if(S.phase==='setup'){
     h+='<h2>Set up the competition</h2><div class="panel"><label for="names" class="sub">One competitor per line</label><textarea id="names" placeholder="Alex&#10;Sam&#10;Jordan">'+esc(S.names)+'</textarea><p class="sub" id="cnt" style="margin:8px 0 0;font-weight:600">'+count()+'</p>'+
-    '<div class="row" style="margin-top:12px"><label>Number of boulders (<span id="grades">'+grades()+'</span>)<input id="total" type="number" min="1" value="'+S.total+'"></label><label>Sudden Death starting angle (5° steps)<input id="angle" type="number" step="5" min="0" value="'+S.angle+'"></label></div>'+
+    '<div class="row" style="margin-top:12px"><label>Number of boulders<input id="total" type="number" min="1" value="'+S.total+'"></label><label>Sudden Death starting angle (5° steps)<input id="angle" type="number" step="5" min="0" value="'+S.angle+'"></label></div>'+
     '<div class="acts"><button class="b-hand" data-a="draw">Draw from the hat</button><button class="b-go" data-a="start"'+(S.players.length>=2?'':' disabled')+'>Start round 1</button><button data-a="startorder">Start with my order</button></div></div>';
     if(S.players.length){h+='<h2>Climbing order ('+S.players.length+')</h2><div class="panel"><ol class="draw">'+S.players.map(function(p){return '<li>'+esc(p.name)+'</li>'}).join('')+'</ol><p class="sub">Editing the names above? Draw again to refresh the order.</p></div>'}
   }else{
     var cur=P(S.queue[0]),sd=S.phase==='sd';
-    var title=S.phase==='done'?'Final standings':(sd?'Sudden Death, round '+S.sdRound+' at '+S.angle+'°':'Round '+S.round+' of '+S.total+': '+g(S.round));
+    var title=S.phase==='done'?'Final standings':(sd?'Sudden Death, round '+S.sdRound+' at '+S.angle+'°':'Round '+S.round+' of '+S.total);
     h+='<h2>'+title+'</h2><div class="stats"><span><b>'+n+'</b> still alive</span><span><b>'+S.sent.length+'</b> sent</span><span><b>'+S.queue.length+'</b> still to climb</span></div>';
     if(S.note)h+='<p class="note">'+esc(S.note)+'</p>';
     if(S.phase==='round'&&n<=3)h+='<div class="banner"><span><b>Only '+n+' climbers left.</b> Move straight to Sudden Death.</span><button class="b-mull" data-a="sd">Start Sudden Death</button></div>';

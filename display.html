@@ -113,7 +113,6 @@ var code=null,clients=[],gotState=false,lastSent=0,last=null,seen=0,first=true,f
 try{code=localStorage.getItem('botb-display-code')}catch(e){}
 function $(id){return document.getElementById(id)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
-function g(n){return 'V'+(n+3)}
 function status(t,live){$('st').textContent=t;$('dot').className='dot'+(live?' live':'');var b=$('bigst');if(b)b.textContent=t}
 
 /* ---------- link ---------- */
@@ -178,7 +177,7 @@ function alive(){return last.players.filter(function(p){return !p.out})}
 function head(){
   var s=last,t='',gr='',sub='';
   if(s.phase==='setup'){t='Starting soon'}
-  else if(s.phase==='round'){t='Round '+s.round+' of '+s.total;gr='<span class="g">'+g(s.round)+'</span>';sub=alive().length+' climbers still in'}
+  else if(s.phase==='round'){t='Round '+s.round+' of '+s.total;sub=alive().length+' climbers still in'}
   else if(s.phase==='sd'){t='Sudden Death, round '+s.sdRound;gr='<span class="g sd">'+s.angle+'°</span>';sub=alive().length+' climbers still in, no skips'}
   else{t='Final results'}
   return '<header><div><div class="brand">Battle of the Board</div><div class="host">An elimination format competition on the Tension Board 2</div></div><div class="round"><div class="t">'+t+gr+'</div>'+(sub?'<div class="s">'+sub+'</div>':'')+'</div></header>';
