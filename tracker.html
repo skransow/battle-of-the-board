@@ -148,7 +148,8 @@ async function exportPdf(){
   head('Final ranking');
   var ranked=S.players.filter(function(p){return p.place}).sort(function(a,b){return a.place-b.place});
   var rows=ranked.map(function(p){return [p.place===1?'1 (Winner)':p.place,p.name,p.place===1?'Last climber standing':(elimAt[p.id]||'')]});
-  table(['Place','Climber','Eliminated in'],rows);
+  var rowH=((H-36)-y)/26;
+  doc.autoTable({startY:y,head:[['Place','Climber','Eliminated in']],body:rows,margin:{left:M,right:M,bottom:36},styles:{fontSize:10,valign:'middle',minCellHeight:rowH,cellPadding:{top:1,bottom:1,left:6,right:6},lineWidth:0},headStyles:{fillColor:DARK,textColor:255,fontSize:10},alternateRowStyles:{fillColor:[244,244,244]}});y=doc.lastAutoTable.finalY+22;
   S.log.forEach(function(r){
     var lab=r.t==='sd'?'Sudden Death round '+r.n+' ('+r.angle+' degrees)':'Round '+r.n;
     r.res.forEach(function(id){lives[id]=1;alive[id]=1});
