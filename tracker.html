@@ -32,10 +32,6 @@ button:disabled{opacity:.35;cursor:not-allowed}
 textarea,input{font:400 16px "Space Mono",monospace;background:var(--k);color:var(--w);border:2px solid var(--line);border-radius:0;padding:8px 10px;width:100%}
 textarea{min-height:170px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.chk{display:flex;align-items:center;gap:10px;margin-top:14px;color:var(--w);text-transform:uppercase;font-size:12px;font-weight:700;letter-spacing:.04em;cursor:pointer}
-.chk input{width:22px;height:22px;accent-color:var(--red);margin:0}
-.chk small{display:block;color:var(--g);font-weight:400;text-transform:none;letter-spacing:0;font-size:12px}
-input:disabled{opacity:.35}
 .row label{flex:1;min-width:150px;color:var(--g);font-size:12px;text-transform:uppercase;display:flex;flex-direction:column;justify-content:space-between;gap:6px;align-self:stretch}
 .now{border-left:10px solid var(--red)}
 .now .sub{color:var(--red);text-transform:uppercase;font-weight:700;font-size:12px;letter-spacing:.05em}
@@ -101,7 +97,7 @@ a{color:var(--red)}
 <main id="app"></main>
 <script>
 var KEY='tb2-tracker';
-function init(){return {phase:'setup',round:1,total:7,angle:35,sdOn:true,obsLen:60,obs:null,sdRound:0,names:'',players:[],queue:[],sent:[],skipped:[],fell:[],note:'',ev:[],log:[],rOrder:[],sdRes:[]}}
+function init(){return {phase:'setup',round:1,total:7,angle:35,obsLen:60,obs:null,sdRound:0,names:'',players:[],queue:[],sent:[],skipped:[],fell:[],note:'',ev:[],log:[],rOrder:[],sdRes:[]}}
 var S=init(),hist=[],armed=false;
 try{var r=JSON.parse(localStorage.getItem(KEY));if(r&&r.S){S=Object.assign(init(),r.S);hist=r.hist||[]}}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify({S:S,hist:hist}))}catch(e){}broadcast()}
@@ -195,7 +191,7 @@ function nextSD(){
 }
 function after(){
   if(S.phase==='round'&&!S.queue.length){
-    if(S.sdOn!==false&&(active().length<=3||S.round>=S.total))startSD();
+    if(active().length<=3||S.round>=S.total)startSD();
     else{var el=elimThis(),d=S.round;closeRound();S.queue=S.sent.concat(S.skipped).filter(function(id){return !P(id).out});S.rOrder=S.queue.slice();S.sent=[];S.skipped=[];S.round++;resetTimer();S.popup={t:'Round '+d+' complete',sub:'',lists:[{h:'Eliminated this round',i:el},{h:'Climbing order',i:names(S.queue)}]}}
   }else if(S.phase==='sd'&&!S.queue.length)nextSD();
 }
@@ -207,11 +203,11 @@ function doAct(a){
     S.queue.shift();p.lives--;S.ev.push(['F',id,Math.max(p.lives,0)]);if(p.lives<=0){eliminate(p);S.ev.push(['E',id,p.place])}else S.queue.push(id);
   }
   S.flash={t:Date.now(),k:a==='fell'?(p.out?'out':'fell'):a,name:p.name,lives:Math.max(p.lives,0),place:p.place};
-  if((S.phase==='sd'||(S.phase==='round'&&S.sdOn===false))&&active().length===1){
+  if(S.phase==='sd'&&active().length===1){
     var w=active()[0],el=elimThis();closeRound();w.place=1;S.phase='done';S.queue=[];S.sent=[];
     S.popup={t:'We have a winner',sub:w.name+' is the last climber standing.',lists:[{h:'Eliminated this round',i:el}]};return;
   }
-  if(S.phase==='round'&&S.sdOn!==false&&active().length<=3){startSD();return}
+  if(S.phase==='round'&&active().length<=3){startSD();return}
   after();
 }
 
@@ -279,7 +275,6 @@ document.addEventListener('input',function(e){
   else if(id==='total')S.total=Math.max(1,parseInt(e.target.value)||1);
   else if(id==='angle')S.angle=parseInt(e.target.value)||35;
   else if(id==='obslen')S.obsLen=Math.max(0,parseInt(e.target.value)||0);
-  else if(id==='sdon'){S.sdOn=e.target.checked;var ag=document.getElementById('angle');if(ag)ag.disabled=!S.sdOn}
   save();
 });
 
@@ -316,16 +311,16 @@ function render(){
   var h=head(),n=active().length;
   if(S.phase==='setup'){
     h+='<h2>Set up the competition</h2><div class="panel"><label for="names" class="sub">One competitor per line</label><textarea id="names" placeholder="Alex&#10;Sam&#10;Jordan">'+esc(S.names)+'</textarea><p class="sub" id="cnt" style="margin:8px 0 0;font-weight:600">'+count()+'</p>'+
-    '<div class="row" style="margin-top:12px"><label>Number of boulders<input id="total" type="number" min="1" value="'+S.total+'"></label><label>Sudden Death angle (°)<input id="angle" type="number" step="5" min="0" value="'+S.angle+'"'+(S.sdOn===false?' disabled':'')+'></label><label>Observation time (sec)<input id="obslen" type="number" step="15" min="0" value="'+obsLen()+'"></label></div><label class="chk"><input type="checkbox" id="sdon"'+(S.sdOn===false?'':' checked')+'><span>Sudden Death final<small>Off: regular rounds continue (repeating the last boulder if needed) until one climber is left.</small></span></label>'+
+    '<div class="row" style="margin-top:12px"><label>Number of boulders<input id="total" type="number" min="1" value="'+S.total+'"></label><label>Sudden Death angle (°)<input id="angle" type="number" step="5" min="0" value="'+S.angle+'"></label><label>Observation time (sec)<input id="obslen" type="number" step="15" min="0" value="'+obsLen()+'"></label></div>'+
     '<div class="acts"><button class="b-hand" data-a="draw">Randomize</button><button class="b-go" id="startbtn" data-a="start"'+(nameCount()>=2?'':' disabled')+'>Start round 1</button></div>'+'</div>';
     if(!S.players.length&&nameCount())syncPlayers();
     h+='<div id="orderpanel">'+orderPanel()+'</div>';
   }else{
     var cur=P(S.queue[0]),sd=S.phase==='sd';
-    var title=S.phase==='done'?'Final standings':(sd?'Sudden Death, round '+S.sdRound+' at '+S.angle+'°':'Round '+S.round+(S.round<=S.total?' of '+S.total:', final boulder'));
+    var title=S.phase==='done'?'Final standings':(sd?'Sudden Death, round '+S.sdRound+' at '+S.angle+'°':'Round '+S.round+' of '+S.total);
     h+='<h2>'+title+'</h2><div class="stats"><span><b>'+n+'</b> still alive</span><span><b>'+S.sent.length+'</b> sent</span><span><b>'+S.queue.length+'</b> still to climb</span></div>';
     if(S.note)h+='<p class="note">'+esc(S.note)+'</p>';
-    if(S.phase==='round'&&S.sdOn!==false&&n<=3)h+='<div class="banner"><span><b>Only '+n+' climbers left.</b> Move straight to Sudden Death.</span><button class="b-mull" data-a="sd">Start Sudden Death</button></div>';
+    if(S.phase==='round'&&n<=3)h+='<div class="banner"><span><b>Only '+n+' climbers left.</b> Move straight to Sudden Death.</span><button class="b-mull" data-a="sd">Start Sudden Death</button></div>';
     if(S.phase==='done'){var w=S.players.filter(function(p){return p.place===1})[0];h+='<div class="panel now"><div class="sub">Winner</div><div class="win">'+esc(w?w.name:'')+'</div></div><div class="acts"><button class="b-hand" data-a="pdf">Export results PDF</button></div><p class="sub" id="pdfmsg"></p>'}
     else if(cur){
       var ob=obsBlocked();
