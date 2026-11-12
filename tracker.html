@@ -97,7 +97,7 @@ a{color:var(--red)}
 <main id="app"></main>
 <script>
 var KEY='tb2-tracker';
-function init(){return {phase:'setup',round:1,total:7,angle:35,obsLen:60,obs:null,sdRound:0,names:'',players:[],queue:[],sent:[],skipped:[],fell:[],note:'',ev:[],log:[],rOrder:[],sdRes:[]}}
+function init(){return {phase:'setup',round:1,total:11,angle:35,obsLen:60,obs:null,sdRound:0,names:'',players:[],queue:[],sent:[],skipped:[],fell:[],note:'',ev:[],log:[],rOrder:[],sdRes:[]}}
 var S=init(),hist=[],armed=false;
 try{var r=JSON.parse(localStorage.getItem(KEY));if(r&&r.S){S=Object.assign(init(),r.S);hist=r.hist||[]}}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify({S:S,hist:hist}))}catch(e){}broadcast()}
