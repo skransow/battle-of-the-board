@@ -22,7 +22,8 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:2vw
 .round .g{display:inline-block;margin-left:.8vw;padding:.1em .3em;background:var(--red);color:var(--k);transform:rotate(3deg);font:400 clamp(26px,3.4vw,64px)/1 Anton,Impact,sans-serif}
 .round .s{color:var(--g);font-size:clamp(11px,1.1vw,20px);margin-top:1vh}
 .main{display:grid;grid-template-columns:1.7fr 1fr;gap:2.4vw;min-height:0}
-.now{background:var(--panel);border:3px solid var(--w);border-left:1.4vw solid var(--red);padding:3vh 3vw;display:flex;flex-direction:column;justify-content:center;min-width:0}
+.now{position:relative;background:var(--panel);border:3px solid var(--w);border-left:0;padding:3vh 3vw 3vh calc(3vw + 1.4vw);display:flex;flex-direction:column;justify-content:center;min-width:0}
+.now::before{content:'';position:absolute;left:0;top:-3px;bottom:-3px;width:1.4vw;background:var(--red)}
 .lab{display:inline-block;align-self:flex-start;background:var(--red);color:var(--k);padding:.25em .7em;font-size:clamp(12px,1.25vw,22px);letter-spacing:.06em}
 .who{font:400 clamp(52px,9vw,180px)/.95 Anton,Impact,sans-serif;margin:1.6vh 0 2.4vh;overflow-wrap:anywhere}
 .hearts{font-size:clamp(56px,8.4vw,160px);line-height:.9;color:var(--red);letter-spacing:.08em;text-transform:none}

@@ -33,7 +33,8 @@ textarea,input{font:400 16px "Space Mono",monospace;background:var(--k);color:va
 textarea{min-height:170px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .row label{flex:1;min-width:150px;color:var(--g);font-size:12px;text-transform:uppercase;display:flex;flex-direction:column;justify-content:space-between;gap:6px;align-self:stretch}
-.now{border-left:10px solid var(--red)}
+.now{position:relative;border-left:0;padding-left:26px}
+.now::before{content:'';position:absolute;left:0;top:-2px;bottom:-2px;width:10px;background:var(--red)}
 .now .sub{color:var(--red);text-transform:uppercase;font-weight:700;font-size:12px;letter-spacing:.05em}
 .now .name{font:400 50px/1 Anton,Impact,sans-serif;text-transform:uppercase;margin:6px 0 8px;overflow-wrap:anywhere}
 .acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
