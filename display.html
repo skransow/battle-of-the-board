@@ -249,9 +249,9 @@ function tickLoop(){
   if(!AC||!sfxOn||obs.st!=='running'||!tEnd||!(BUF.tick1 instanceof AudioBuffer)||!(BUF.tick2 instanceof AudioBuffer)){if(Object.keys(tickSched).length)cancelTicks();tickEnd=0;return}
   if(tickEnd!==tEnd&&Math.abs(tickEnd-tEnd)>150){cancelTicks();tickEnd=tEnd}
   if(AC.state!=='running')return;
-  var now=performance.now(),top=Math.ceil((tEnd-now)/1000)-1;
+  var now=Date.now(),lat=((AC.baseLatency||0)+(AC.outputLatency||0))*1000,top=Math.ceil((tEnd-now)/1000)-1;
   for(var n=top;n>=1&&n>=top-1;n--){
-    if(tickSched[n])continue;var dt=(tEnd-n*1000-now)/1000;if(dt<0||dt>0.4)continue;
+    if(tickSched[n])continue;var dt=(tEnd-n*1000-now-lat)/1000;if(dt<-0.02||dt>0.4)continue;if(dt<0)dt=0;
     var src=AC.createBufferSource();src.buffer=BUF[n%2?'tick2':'tick1'];src.connect(AC.destination);src.start(AC.currentTime+dt);tickSched[n]=src;
   }
 }
@@ -383,9 +383,12 @@ function showCard(s){
   cardT=setTimeout(function(){el.className=''},3600);
 }
 function mmss(l){return Math.floor(l/60)+':'+String(l%60).padStart(2,'0')}
-function tick(){var o=$('otm');if(o){var l=obs.st==='running'?Math.max(0,Math.ceil((tEnd-Date.now())/1000)):obs.left;o.textContent=mmss(l);o.className='otm'+(obs.st==='paused'?' paused':obs.st==='running'&&l<=10?' hot':'');var os=$('ost');if(os)os.textContent=obs.st==='pending'?'Observation starts soon':obs.st==='paused'?'Observation paused':'Observation time'}
-  var el=$('tm');if(!el)return;var t='';if(obs.st==='running'){var l=Math.ceil((tEnd-Date.now())/1000);if(l>0)t='Observe '+mmss(l)}else if(obs.st==='paused')t='Paused '+mmss(obs.left);else if(obs.st==='pending')t='Observe '+mmss(obs.left);el.textContent=t;el.className='timer'+(obs.st==='running'?'':' idle')}
-setInterval(tick,250);
+function setT(el,v){if(el&&el.textContent!==v)el.textContent=v}
+function setC(el,v){if(el&&el.className!==v)el.className=v}
+function tick(){var o=$('otm');if(o){var l=obs.st==='running'?Math.max(0,Math.ceil((tEnd-Date.now())/1000)):obs.left;setT(o,mmss(l));setC(o,'otm'+(obs.st==='paused'?' paused':obs.st==='running'&&l<=10?' hot':''));setT($('ost'),obs.st==='pending'?'Observation starts soon':obs.st==='paused'?'Observation paused':'Observation time')}
+  var el=$('tm');if(!el)return;var t='';if(obs.st==='running'){var l2=Math.ceil((tEnd-Date.now())/1000);if(l2>0)t='Observe '+mmss(l2)}else if(obs.st==='paused')t='Paused '+mmss(obs.left);else if(obs.st==='pending')t='Observe '+mmss(obs.left);setT(el,t);setC(el,'timer'+(obs.st==='running'?'':' idle'))}
+(function frame(){tick();requestAnimationFrame(frame)})();
+setInterval(tick,500);
 
 render();
 if(code)connect();else showConnect();
