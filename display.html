@@ -230,7 +230,7 @@ $('fs').addEventListener('click',function(){var d=document.documentElement;if(do
 /* ---------- elimination sounds ---------- */
 var SFX=["ack", "bonk", "bruh", "explosion", "fail", "fail-trumpet", "gunshot", "huh-cat", "lego-die", "mystery", "oof", "punch", "punch-hd", "snake", "vine-boom", "wasted", "wilhelm", "yoda"],sfxOn=true,lastSfx=null,sfx={};
 try{sfxOn=localStorage.getItem('botb-sound')!=='off'}catch(e){}
-var SV='?v=9',AC=null,BUF={};
+var SV='?v=10',AC=null,BUF={};
 try{var ACtor=window.AudioContext||window.webkitAudioContext;if(ACtor)AC=new ACtor({latencyHint:'interactive'})}catch(e){}
 function loadSnd(key,url){
   if(!AC){var a=new Audio(url);a.preload='auto';BUF[key]=a;return}
