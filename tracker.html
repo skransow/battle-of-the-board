@@ -36,7 +36,7 @@ textarea{min-height:170px}
 .now{position:relative;border-left:0;padding-left:26px}
 .now::before{content:'';position:absolute;left:0;top:-2px;bottom:-2px;width:10px;background:var(--red)}
 .now .sub{color:var(--red);text-transform:uppercase;font-weight:700;font-size:12px;letter-spacing:.05em}
-.now .name{font:400 50px/1 Anton,Impact,sans-serif;text-transform:uppercase;margin:6px 0 8px;overflow-wrap:anywhere}
+.now .name{font:400 50px/56px Anton,Impact,sans-serif;height:56px;text-transform:uppercase;margin:6px 0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
 .acts button{flex:1;min-width:110px;padding:16px 10px;font-size:16px}
 .banner{border:2px solid var(--red);padding:12px 16px;margin:12px 0;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;text-transform:uppercase;font-size:13px}
@@ -331,6 +331,9 @@ function modal(){
   p.lists.forEach(function(l){if(l.i.length)h+='<div class="sub">'+l.h+'</div><ol>'+l.i.map(function(x){if(x&&typeof x==='object')return '<li>'+esc(x.n)+(x.s?'<span class="ps">'+esc(x.s)+'</span>':'')+'</li>';var m=/^(.*) \(prize place (\d+)\)$/.exec(String(x));return '<li>'+(m?esc(m[1])+'<span class="pp">Prize place '+m[2]+'</span>':esc(x))+'</li>'}).join('')+'</ol>'});
   return h+'<div class="acts"><button id="dm" class="b-go" data-a="dismiss">Continue</button></div></div></div>';
 }
+function fitName(){var el=document.querySelector('.now .name');if(!el)return;var sz=50;el.style.fontSize=sz+'px';while(el.scrollWidth>el.clientWidth+1&&sz>18){sz-=2;el.style.fontSize=sz+'px'}}
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitName);
+window.addEventListener('resize',fitName);
 function render(){
   var h=head(),n=active().length;
   if(S.phase==='setup'){
@@ -362,6 +365,7 @@ function render(){
   }
   if(S.popup)h+=modal();
   document.getElementById('app').innerHTML=h;
+  fitName();
   var dm=document.getElementById('dm');if(dm)dm.focus();
 }
 LINK.code=linkCode();
