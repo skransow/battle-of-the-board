@@ -230,7 +230,7 @@ $('fs').addEventListener('click',function(){var d=document.documentElement;if(do
 /* ---------- elimination sounds ---------- */
 var SFX=["ack", "bonk", "bruh", "explosion", "fail", "fail-trumpet", "gunshot", "huh-cat", "lego-die", "mystery", "oof", "punch", "punch-hd", "snake", "vine-boom", "wasted", "wilhelm", "yoda"],sfxOn=true,lastSfx=null,sfx={};
 try{sfxOn=localStorage.getItem('botb-sound')!=='off'}catch(e){}
-var SV='?v=11',AC=null,BUF={};
+var SV='?v=12',AC=null,BUF={};
 try{var ACtor=window.AudioContext||window.webkitAudioContext;if(ACtor)AC=new ACtor({latencyHint:'interactive'})}catch(e){}
 function loadSnd(key,url){
   if(!AC){var a=new Audio(url);a.preload='auto';BUF[key]=a;return}
@@ -241,6 +241,21 @@ loadSnd('round','sounds/round.mp3'+SV);
 loadSnd('fall','sounds/fall.mp3'+SV);
 loadSnd('send','sounds/send.mp3'+SV);
 loadSnd('skip','sounds/skip.mp3'+SV);
+loadSnd('tick1','sounds/tick1.mp3'+SV);loadSnd('tick2','sounds/tick2.mp3'+SV);
+/* observation countdown ticking: one tick per second, alternating samples, scheduled on the audio clock */
+var tickSched={},tickEnd=0;
+function cancelTicks(){Object.keys(tickSched).forEach(function(k){try{tickSched[k].stop()}catch(e){}});tickSched={}}
+function tickLoop(){
+  if(!AC||!sfxOn||obs.st!=='running'||!tEnd||!(BUF.tick1 instanceof AudioBuffer)||!(BUF.tick2 instanceof AudioBuffer)){if(Object.keys(tickSched).length)cancelTicks();tickEnd=0;return}
+  if(tickEnd!==tEnd&&Math.abs(tickEnd-tEnd)>150){cancelTicks();tickEnd=tEnd}
+  if(AC.state!=='running')return;
+  var now=performance.now(),top=Math.ceil((tEnd-now)/1000)-1;
+  for(var n=top;n>=1&&n>=top-1;n--){
+    if(tickSched[n])continue;var dt=(tEnd-n*1000-now)/1000;if(dt<0||dt>0.4)continue;
+    var src=AC.createBufferSource();src.buffer=BUF[n%2?'tick2':'tick1'];src.connect(AC.destination);src.start(AC.currentTime+dt);tickSched[n]=src;
+  }
+}
+setInterval(tickLoop,100);
 function playSkip(force){if(!sfxOn&&!force)return;playKey('skip')}
 function playSend(force){if(!sfxOn&&!force)return;playKey('send')}
 function playFall(force){if(!sfxOn&&!force)return;playKey('fall')}
