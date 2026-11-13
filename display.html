@@ -295,7 +295,7 @@ function doFlash(f){
 
 /* ---------- render ---------- */
 function P(id){return last.players.filter(function(p){return p.id===id})[0]}
-function hearts(n){n=Math.max(n,0);return '<span class="f'+(n===1?' last':'')+'">'+'♥'.repeat(n)+'</span><span class="e">'+'♥'.repeat(Math.max(3-n,0))+'</span>'}
+function hearts(n){n=Math.max(n,0);return '<span class="f'+(n===1?' last':'')+'">'+'♥'.repeat(n)+'</span><span class="e">'+'♥'.repeat(Math.max(((last&&last.startLives)||3)-n,0))+'</span>'}
 function alive(){return last.players.filter(function(p){return !p.out})}
 function head(){
   var s=last,t='',gr='',sub='';

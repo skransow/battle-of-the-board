@@ -102,7 +102,7 @@ a{color:var(--red)}
 <main id="app"></main>
 <script>
 var KEY='tb2-tracker';
-function init(){return {phase:'setup',round:1,total:7,angle:35,obsLen:60,obs:null,sdRound:0,names:'',players:[],queue:[],sent:[],skipped:[],fell:[],note:'',ev:[],log:[],rOrder:[],sdRes:[],sdBonus:[]}}
+function init(){return {phase:'setup',round:1,total:7,angle:35,obsLen:60,startLives:3,obs:null,sdRound:0,names:'',players:[],queue:[],sent:[],skipped:[],fell:[],note:'',ev:[],log:[],rOrder:[],sdRes:[],sdBonus:[]}}
 var S=init(),hist=[],armed=false;
 try{var r=JSON.parse(localStorage.getItem(KEY));if(r&&r.S){S=Object.assign(init(),r.S);hist=r.hist||[]}}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify({S:S,hist:hist}))}catch(e){}broadcast()}
@@ -111,6 +111,7 @@ function P(id){return S.players.filter(function(p){return p.id===id})[0]}
 function active(){return S.players.filter(function(p){return !p.out})}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function fmt(t){return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')}
+function startLives(){var n=parseInt(S.startLives);return isNaN(n)?3:Math.min(9,Math.max(1,n))}
 function obsLen(){var n=parseInt(S.obsLen);return isNaN(n)?60:Math.max(0,n)}
 function resetTimer(){S.obs=obsLen()>0?{st:'pending',left:obsLen()}:{st:'done',left:0}}
 function obsLeft(){var o=S.obs;if(!o)return 0;return o.st==='running'?Math.max(0,Math.ceil((o.endAt-Date.now())/1000)):o.left}
@@ -142,7 +143,7 @@ async function exportPdf(){
   doc.setFontSize(9);doc.text('Official results  |  '+new Date().toLocaleDateString(),M,67);
   var win=S.players.filter(function(p){return p.place===1})[0],mainN=0,sdN=0,elimAt={},lives={},alive={},resSet=[];
   S.log.forEach(function(r){if(r.t==='sd'){sdN++;if(r.n===1)resSet=r.res}else mainN++});
-  S.players.forEach(function(p){lives[p.id]=3;alive[p.id]=1});
+  S.players.forEach(function(p){lives[p.id]=startLives();alive[p.id]=1});
   S.log.forEach(function(r){var lab=r.t==='sd'?'Sudden Death round '+r.n:'Round '+r.n;r.ev.forEach(function(e){if(e[0]==='E')elimAt[e[1]]=lab})});
   var y=104;
   doc.setTextColor(28,31,36);doc.setFont('helvetica','bold');doc.setFontSize(14);doc.text('Winner: '+(win?win.name:'-'),M,y);
@@ -242,7 +243,7 @@ function linkCode(){var c=null;try{c=localStorage.getItem('botb-code')}catch(e){
 function upCount(){return LINK.clients.filter(function(c){return c.connected}).length}
 function linkLabel(){if(Date.now()-LINK.lastSeen<15000)return 'Display connected';if(!window.mqtt)return 'Display link unavailable. Check the internet connection and reload.';return upCount()?'Waiting for a display':'Connecting to the message server'}
 function refreshLink(){var el=document.getElementById('linkst');if(el)el.textContent=linkLabel()}
-function payload(){return {type:'state',sentAt:Date.now(),s:{phase:S.phase,round:S.round,total:S.total,angle:S.angle,sdRound:S.sdRound,players:S.players,queue:S.queue,sent:S.sent,skipped:S.skipped,popup:S.popup||null,flash:S.flash||null,names:S.phase==='setup'?S.names.split('\n').map(function(x){return x.trim()}).filter(Boolean):[]},timer:{st:S.obs?S.obs.st:'done',left:obsLeft(),ms:S.obs&&S.obs.st==='running'?Math.max(0,S.obs.endAt-Date.now()):obsLeft()*1000,full:obsLen()}}}
+function payload(){return {type:'state',sentAt:Date.now(),s:{phase:S.phase,round:S.round,total:S.total,angle:S.angle,sdRound:S.sdRound,players:S.players,queue:S.queue,sent:S.sent,skipped:S.skipped,popup:S.popup||null,flash:S.flash||null,startLives:startLives(),names:S.phase==='setup'?S.names.split('\n').map(function(x){return x.trim()}).filter(Boolean):[]},timer:{st:S.obs?S.obs.st:'done',left:obsLeft(),ms:S.obs&&S.obs.st==='running'?Math.max(0,S.obs.endAt-Date.now()):obsLeft()*1000,full:obsLen()}}}
 function pub(c,m){if(c.connected)try{c.publish(topic('state'),m,{retain:true,qos:0})}catch(e){}}
 function broadcast(){if(!LINK.code)return;var m=JSON.stringify(payload());LINK.clients.forEach(function(c){pub(c,m)})}
 function startLink(){
@@ -266,7 +267,7 @@ function syncPlayers(){
   var n=S.names.split('\n').map(function(x){return x.trim()}).filter(Boolean),order;
   if(S.randomized){var pool=n.slice();order=[];S.players.forEach(function(p){var i=pool.indexOf(p.name);if(i>-1){order.push(p.name);pool.splice(i,1)}});order=order.concat(pool)}
   else order=n;
-  S.players=order.map(function(nm,i){return {id:i,name:nm,lives:3,mull:true,out:false,place:null,outRound:null}});
+  S.players=order.map(function(nm,i){return {id:i,name:nm,lives:startLives(),mull:true,out:false,place:null,outRound:null}});
   S.queue=S.players.map(function(p){return p.id});S.rOrder=S.queue.slice();S.ev=[];S.log=[];
 }
 function orderPanel(){
@@ -275,7 +276,7 @@ function orderPanel(){
 }
 function drawNames(noShuffle){
   var n=S.names.split('\n').map(function(x){return x.trim()}).filter(Boolean);
-  S.players=(noShuffle?n:shuffle(n)).map(function(nm,i){return {id:i,name:nm,lives:3,mull:true,out:false,place:null,outRound:null}});
+  S.players=(noShuffle?n:shuffle(n)).map(function(nm,i){return {id:i,name:nm,lives:startLives(),mull:true,out:false,place:null,outRound:null}});
   S.queue=S.players.map(function(p){return p.id});S.rOrder=S.queue.slice();S.ev=[];S.log=[];
 }
 document.addEventListener('click',function(e){
@@ -298,11 +299,12 @@ document.addEventListener('input',function(e){
   else if(id==='total')S.total=Math.max(1,parseInt(e.target.value)||1);
   else if(id==='angle')S.angle=parseInt(e.target.value)||35;
   else if(id==='obslen')S.obsLen=Math.max(0,parseInt(e.target.value)||0);
+  else if(id==='lives'){S.startLives=Math.min(9,Math.max(1,parseInt(e.target.value)||3));syncPlayers()}
   save();
 });
 
 document.addEventListener('change',function(e){if(e.target.id==='angle'){S.angle=Math.max(0,Math.round((parseInt(e.target.value)||35)/5)*5);e.target.value=S.angle;save()}});
-function hearts(p){var m=3;return '<span class="heart" aria-label="'+p.lives+' lives"><span class="'+(p.lives===1&&!p.out?'last':'')+'">'+'♥'.repeat(Math.max(p.lives,0))+'</span>'+'♡'.repeat(Math.max(m-p.lives,0))+'</span>'}
+function hearts(p){var m=startLives();return '<span class="heart" aria-label="'+p.lives+' lives"><span class="'+(p.lives===1&&!p.out?'last':'')+'">'+'♥'.repeat(Math.max(p.lives,0))+'</span>'+'♡'.repeat(Math.max(m-p.lives,0))+'</span>'}
 function status(p){
   if(p.out)return 'Out, place '+p.place;
   if(S.phase==='done'&&p.place===1)return 'Winner';
@@ -338,7 +340,7 @@ function render(){
   var h=head(),n=active().length;
   if(S.phase==='setup'){
     h+='<h2>Set up the competition</h2><div class="panel"><label for="names" class="sub">One competitor per line</label><textarea id="names" placeholder="Alex&#10;Sam&#10;Jordan">'+esc(S.names)+'</textarea><p class="sub" id="cnt" style="margin:8px 0 0;font-weight:600">'+count()+'</p>'+
-    '<div class="row" style="margin-top:12px"><label>Number of boulders<input id="total" type="number" min="1" value="'+S.total+'"></label><label>Sudden Death angle (°)<input id="angle" type="number" step="5" min="0" value="'+S.angle+'"></label><label>Observation time (sec)<input id="obslen" type="number" step="15" min="0" value="'+obsLen()+'"></label></div>'+
+    '<div class="row" style="margin-top:12px"><label>Number of boulders<input id="total" type="number" min="1" value="'+S.total+'"></label><label>Sudden Death angle (°)<input id="angle" type="number" step="5" min="0" value="'+S.angle+'"></label><label>Observation time (sec)<input id="obslen" type="number" step="15" min="0" value="'+obsLen()+'"></label><label>Lives per climber<input id="lives" type="number" step="1" min="1" max="9" value="'+startLives()+'"></label></div>'+
     '<div class="acts"><button class="b-hand" data-a="draw">Randomize</button><button class="b-go" id="startbtn" data-a="start"'+(nameCount()>=2?'':' disabled')+'>Start round 1</button></div>'+'</div>';
     if(!S.players.length&&nameCount())syncPlayers();
     h+='<div id="orderpanel">'+orderPanel()+'</div>';
