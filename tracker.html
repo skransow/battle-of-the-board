@@ -131,21 +131,25 @@ function elimThis(){return S.players.filter(function(p){return p.out&&p.outRound
 function uniq(a){return a.filter(function(x,i){return a.indexOf(x)===i})}
 
 function closeRound(){S.log.push({t:S.phase==='sd'?'sd':'main',n:S.phase==='sd'?S.sdRound:S.round,angle:S.angle,order:S.rOrder.slice(),ev:S.ev.slice(),res:(S.phase==='sd'&&S.sdRound===1)?S.sdRes.slice():[],bonus:(S.phase==='sd'&&S.sdRound===1)?(S.sdBonus||[]).slice():[]});S.ev=[]}
+function loadLogo(){return fetch('logo-v2.png').then(function(r){if(!r.ok)throw 0;return r.blob()}).then(function(b){return new Promise(function(ok,no){var fr=new FileReader();fr.onload=function(){var i=new Image();i.onload=function(){ok({data:fr.result,w:i.naturalWidth,h:i.naturalHeight})};i.onerror=no;i.src=fr.result};fr.onerror=no;fr.readAsDataURL(b)})}).catch(function(){return null})}
 async function exportPdf(){
   var msg=document.getElementById('pdfmsg');
   function say(t){if(msg)msg.textContent=t}
   if(!window.jspdf||!window.jspdf.jsPDF){say('The PDF library did not load. Check your connection and reload the page.');return}
   var dl=null;try{dl=window.claude?await window.claude.use('downloads'):null}catch(e){}
   var doc=new window.jspdf.jsPDF({unit:'pt',format:'letter'}),W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),M=40,DARK=[28,31,36];
-  doc.setFillColor(28,31,36);doc.rect(0,0,W,78,'F');
-  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(24);doc.text('BATTLE OF THE BOARD',M,36);
-  doc.setFont('helvetica','normal');doc.setFontSize(10);doc.text('Tension Board 2 Competition  |  Hosted by Rock Revolution',M,53);
-  doc.setFontSize(9);doc.text('Official results  |  '+new Date().toLocaleDateString(),M,67);
+  var HB=96;doc.setFillColor(10,10,10);doc.rect(0,0,W,HB,'F');
+  var logo=await loadLogo();
+  if(logo){var lh=72,lw=lh*logo.w/logo.h;doc.addImage(logo.data,'PNG',M-6,(HB-lh)/2,lw,lh,'botb-logo','FAST')}
+  else{doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(24);doc.text('BATTLE OF THE BOARD',M,52)}
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text('Tension Board 2 Competition',W-M,38,{align:'right'});
+  doc.setFont('helvetica','normal');doc.setFontSize(10);doc.text('Hosted by Rock Revolution',W-M,54,{align:'right'});
+  doc.setFontSize(9);doc.setTextColor(200,200,200);doc.text('Official results  |  '+new Date().toLocaleDateString(),W-M,69,{align:'right'});
   var win=S.players.filter(function(p){return p.place===1})[0],mainN=0,sdN=0,elimAt={},lives={},alive={},resSet=[];
   S.log.forEach(function(r){if(r.t==='sd'){sdN++;if(r.n===1)resSet=r.res}else mainN++});
   S.players.forEach(function(p){lives[p.id]=startLives();alive[p.id]=1});
   S.log.forEach(function(r){var lab=r.t==='sd'?'Sudden Death round '+r.n:'Round '+r.n;r.ev.forEach(function(e){if(e[0]==='E')elimAt[e[1]]=lab})});
-  var y=104;
+  var y=HB+28;
   doc.setTextColor(28,31,36);doc.setFont('helvetica','bold');doc.setFontSize(14);doc.text('Winner: '+(win?win.name:'-'),M,y);
   doc.setFont('helvetica','normal');doc.setFontSize(9);doc.text(S.players.length+' climbers  |  '+mainN+' rounds  |  '+sdN+' Sudden Death rounds',M,y+14);
   y+=34;
