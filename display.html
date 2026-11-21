@@ -135,6 +135,10 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--red);outline-of
 #barpanel{display:flex;flex-direction:column;gap:8px;width:300px;max-width:calc(100vw - 28px);background:var(--k);border:2px solid var(--w);box-shadow:6px 6px 0 var(--red);padding:12px}
 #barpanel[hidden]{display:none}
 #barpanel .bst{display:flex;gap:8px;align-items:center;color:var(--w);font-size:12px;line-height:1.3;padding-bottom:4px}
+#sndlist{display:flex;flex-direction:column;gap:6px;padding-left:12px;border-left:2px solid var(--red)}
+#sndlist[hidden]{display:none}
+#sndsub .car{display:inline-block;transition:transform .15s}
+#sndsub[aria-expanded="true"] .car{transform:rotate(90deg)}
 #barpanel .mb,#barpanel button{font:700 11px "Space Mono",monospace;text-transform:uppercase;background:var(--k);color:var(--w);border:1px solid #444;border-radius:0;padding:8px 10px;cursor:pointer;text-decoration:none;text-align:left}
 #barpanel .mb:hover,#barpanel button:hover{border-color:var(--w)}
 .dot{width:10px;height:10px;display:inline-block;flex:none;background:var(--red)}
@@ -173,7 +177,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--red);outline-of
   </form>
 </div>
 <div id="sndhint">Click anywhere to turn on sound</div>
-<div id="bar"><div id="barpanel" hidden><div class="bst"><span class="dot" id="dot"></span><span id="st">Not connected</span></div><button id="chg">Change code</button><button id="fs">Full screen</button><button id="snd">Sound: on</button><button id="sndtest">Test elimination sound</button><button id="sndround">Test round sound</button><button id="sndfall">Test fall sound</button><button id="sndsend">Test send sound</button><button id="sndskip">Test skip sound</button><button id="sndbegin">Test begin sound</button><a class="mb" href="./">Menu</a></div><button id="bartog" aria-expanded="false" aria-controls="barpanel" aria-label="Connection and settings"><span class="dot" id="dot2"></span>&#8943;</button></div>
+<div id="bar"><div id="barpanel" hidden><div class="bst"><span class="dot" id="dot"></span><span id="st">Not connected</span></div><button id="chg">Change code</button><button id="fs">Full screen</button><button id="snd">Sound: on</button><button id="sndsub" aria-expanded="false" aria-controls="sndlist">Test sounds <span class="car">&#9656;</span></button><div id="sndlist" hidden><button id="sndround">Round</button><button id="sndsend">Send</button><button id="sndfall">Fall</button><button id="sndskip">Skip</button><button id="sndtest">Elimination (random)</button><button id="sndbegin">Begin climbing</button></div><a class="mb" href="./">Menu</a></div><button id="bartog" aria-expanded="false" aria-controls="barpanel" aria-label="Connection and settings"><span class="dot" id="dot2"></span>&#8943;</button></div>
 <script>
 var cardKey='',firstState=true,code=null,clients=[],gotState=false,lastSent=0,last=null,seen=0,first=true,flashUntil=0,tEnd=0,obs={st:'done',left:0},retry=null,flashT=null;
 try{code=localStorage.getItem('botb-display-code')}catch(e){}
@@ -232,6 +236,7 @@ function showConnect(){$('ch').innerHTML=brandTitle();$('connect').className='on
 $('cf').addEventListener('submit',function(e){e.preventDefault();var v=$('ci').value.trim().toUpperCase();if(v.length!==4)return;code=v;try{localStorage.setItem('botb-display-code',v)}catch(x){}$('connect').className='';first=true;connect()});
 $('chg').addEventListener('click',function(){barOpen(false);showConnect()});
 function barOpen(o){$('barpanel').hidden=!o;$('bartog').setAttribute('aria-expanded',o?'true':'false')}
+$('sndsub').addEventListener('click',function(e){e.stopPropagation();var o=$('sndlist').hidden;$('sndlist').hidden=!o;$('sndsub').setAttribute('aria-expanded',o?'true':'false')});
 $('bartog').addEventListener('click',function(e){e.stopPropagation();barOpen($('barpanel').hidden)});
 document.addEventListener('click',function(e){if(!$('bar').contains(e.target))barOpen(false)});
 document.addEventListener('keydown',function(e){if(e.key==='Escape')barOpen(false)});
