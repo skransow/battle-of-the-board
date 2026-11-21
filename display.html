@@ -61,14 +61,15 @@ footer .chip{border:2px solid var(--w);color:var(--w);padding:.1em .6em}
 .order{list-style:none;display:grid;grid-auto-flow:column;grid-template-columns:repeat(4,minmax(0,1fr));column-gap:3vw;text-align:left;font-size:clamp(12px,1.4vw,26px);margin:0;padding:0;width:min(92vw,1400px)}
 .order li{padding:.3vh 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .order li span{display:inline-block;width:2.4em;color:var(--red)}
-.podium{display:flex;gap:3vw;align-items:flex-end;justify-content:center}
-.podium div{text-align:center}
+.podium{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr) minmax(0,1fr);gap:2.5vw;align-items:end;width:min(94vw,1800px)}
+.podium div{text-align:center;min-width:0}
+.podium .pn{overflow-wrap:break-word}
 .podium .pl{display:inline-block;background:var(--w);color:var(--k);padding:.2em .6em;font-size:clamp(11px,1.3vw,24px)}
 .podium .p1 .pl{background:var(--red)}
 .podium .pn{font:400 clamp(30px,3.8vw,72px)/1 Anton,Impact,sans-serif;margin-top:.8vh}
-.podium .p1 .pn{font-size:clamp(60px,9.5vw,190px);color:var(--red)}
-.rest{list-style:none;margin:5vh 0 0;padding:0;columns:4;column-gap:3vw;text-align:left;font-size:clamp(12px,1.35vw,24px);max-width:90vw}
-.rest li{padding:.4vh 0;break-inside:avoid;color:var(--w)}
+.podium .p1 .pn{font-size:clamp(48px,7.5vw,160px);color:var(--red)}
+.rest{list-style:none;margin:5vh auto 0;padding:0;display:grid;grid-auto-flow:column;column-gap:3vw;row-gap:.4vh;text-align:left;font-size:clamp(12px,1.35vw,24px);max-width:90vw;justify-content:center}
+.rest li{padding:.4vh 0;color:var(--w);white-space:nowrap}
 .rest li span{display:inline-block;width:2.4em;color:var(--red)}
 /* flash */
 #flash{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;z-index:30;padding:4vw}
@@ -336,7 +337,8 @@ function render(){
     var by={};s.players.forEach(function(p){by[p.place]=p});
     function pd(n,c){var p=by[n];return p?'<div class="'+c+'"><div class="pl">'+(n===1?'Champion':n===2?'2nd place':'3rd place')+'</div><div class="pn">'+esc(p.name)+'</div></div>':''}
     var rest=s.players.filter(function(p){return p.place>3}).sort(function(a,b){return a.place-b.place});
-    h+='<div class="center"><div class="podium">'+pd(2,'p2')+pd(1,'p1')+pd(3,'p3')+'</div>'+(rest.length?'<ol class="rest">'+rest.map(function(p){return '<li><span>'+p.place+'</span>'+esc(p.name)+'</li>'}).join('')+'</ol>':'')+'</div><footer>'+s.players.length+' climbers competed</footer>';
+    var rc=Math.min(4,rest.length)||1,rr=Math.ceil(rest.length/rc);
+    h+='<div class="center"><div class="podium">'+(pd(2,'p2')||'<div></div>')+pd(1,'p1')+(pd(3,'p3')||'<div></div>')+'</div>'+(rest.length?'<ol class="rest" style="grid-template-rows:repeat('+rr+',auto)">'+rest.map(function(p){return '<li><span>'+p.place+'</span>'+esc(p.name)+'</li>'}).join('')+'</ol>':'')+'</div><footer>'+s.players.length+' climbers competed</footer>';
   }else{
     var cur=P(s.queue[0]),sd=s.phase==='sd',observing=!!cur&&obs.st!=='done';
     h+='<div class="main"><section class="now">';
