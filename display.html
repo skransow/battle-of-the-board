@@ -177,7 +177,7 @@ input:focus-visible,button:focus-visible{outline:3px solid var(--red);outline-of
   </form>
 </div>
 <div id="sndhint">Click anywhere to turn on sound</div>
-<div id="bar"><div id="barpanel" hidden><div class="bst"><span class="dot" id="dot"></span><span id="st">Not connected</span></div><button id="chg">Change code</button><button id="fs">Full screen</button><button id="snd">Sound: on</button><button id="sndsub" aria-expanded="false" aria-controls="sndlist">Test sounds <span class="car">&#9656;</span></button><div id="sndlist" hidden><button id="sndround">Round</button><button id="sndsend">Send</button><button id="sndfall">Fall</button><button id="sndskip">Skip</button><button id="sndtest">Elimination (random)</button><button id="sndbegin">Begin climbing</button></div><a class="mb" href="./">Menu</a></div><button id="bartog" aria-expanded="false" aria-controls="barpanel" aria-label="Connection and settings"><span class="dot" id="dot2"></span>&#8943;</button></div>
+<div id="bar"><div id="barpanel" hidden><div class="bst"><span class="dot" id="dot"></span><span id="st">Not connected</span></div><button id="chg">Change code</button><button id="fs">Full screen</button><button id="snd">Sound: on</button><button id="sndsub" aria-expanded="false" aria-controls="sndlist">Test sounds <span class="car">&#9656;</span></button><div id="sndlist" hidden><button id="sndround">Round</button><button id="sndsd">Sudden Death</button><button id="sndsend">Send</button><button id="sndfall">Fall</button><button id="sndskip">Skip</button><button id="sndtest">Elimination (random)</button><button id="sndbegin">Begin climbing</button></div><a class="mb" href="./">Menu</a></div><button id="bartog" aria-expanded="false" aria-controls="barpanel" aria-label="Connection and settings"><span class="dot" id="dot2"></span>&#8943;</button></div>
 <script>
 var cardKey='',firstState=true,code=null,clients=[],gotState=false,lastSent=0,last=null,seen=0,first=true,flashUntil=0,tEnd=0,obs={st:'done',left:0},retry=null,flashT=null;
 try{code=localStorage.getItem('botb-display-code')}catch(e){}
@@ -245,7 +245,7 @@ $('fs').addEventListener('click',function(){var d=document.documentElement;if(do
 /* ---------- elimination sounds ---------- */
 var SFX=["ack", "bonk", "bruh", "explosion", "fail", "fail-trumpet", "gunshot", "lego-die", "mystery", "oof", "punch", "punch-hd", "snake", "vine-boom", "wasted", "wilhelm", "yoda"],sfxOn=true,lastSfx=null,sfx={};
 try{sfxOn=localStorage.getItem('botb-sound')!=='off'}catch(e){}
-var SV='?v=18',AC=null,BUF={};
+var SV='?v=19',AC=null,BUF={};
 try{var ACtor=window.AudioContext||window.webkitAudioContext;if(ACtor)AC=new ACtor({latencyHint:'interactive'})}catch(e){}
 function loadSnd(key,url){
   if(!AC){var a=new Audio(url);a.preload='auto';BUF[key]=a;return}
@@ -253,6 +253,7 @@ function loadSnd(key,url){
 }
 SFX.forEach(function(n){loadSnd(n,'sounds/elim/'+n+'.mp3'+SV)});
 loadSnd('round','sounds/round.mp3'+SV);
+loadSnd('suddendeath','sounds/suddendeath.mp3'+SV);
 loadSnd('fall','sounds/fall.mp3'+SV);
 loadSnd('send','sounds/send.mp3'+SV);
 loadSnd('skip','sounds/skip.mp3'+SV);
@@ -296,6 +297,7 @@ if(navigator.userActivation&&!navigator.userActivation.hasBeenActive)setTimeout(
 $('snd').addEventListener('click',function(){sfxOn=!sfxOn;try{localStorage.setItem('botb-sound',sfxOn?'on':'off')}catch(e){}sndLabel();if(!sfxOn)sndHint(false)});
 $('sndtest').addEventListener('click',function(){playElim(true)});
 $('sndround').addEventListener('click',function(){playRound(true)});
+$('sndsd').addEventListener('click',function(){playKey('suddendeath')});
 $('sndfall').addEventListener('click',function(){playFall(true)});
 $('sndsend').addEventListener('click',function(){playSend(true)});
 $('sndskip').addEventListener('click',function(){playSkip(true)});
@@ -413,7 +415,7 @@ function scheduleBegin(endAt){
 }
 setInterval(function(){if(obs.st==='running'&&tEnd&&tEnd-Date.now()<=400)scheduleBegin(tEnd)},50);
 function showCard(s){
-  playRound();
+  if(s.phase==='sd'&&s.sdRound===1){if(sfxOn)playKey('suddendeath')}else playRound();
   var el=$('card'),big,sub,len;
   var lines;
   if(s.phase==='sd'&&s.sdRound===1){lines=[{w:'Sudden',c:'var(--red)'},{w:'Death',c:'var(--w)'}];sub='Board at '+s.angle+'°'}
