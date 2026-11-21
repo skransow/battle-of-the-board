@@ -216,16 +216,17 @@ function onData(m){
   var s=m.s;
   if(s.flash&&s.flash.t>seen){if(!first)doFlash(s.flash);seen=s.flash.t}
   first=false;
-  var prevSt=obs.st;obs=m.timer&&m.timer.st?m.timer:{st:'done',left:0};
+  var prevSt=obs.st,prevEnd=tEnd;obs=m.timer&&m.timer.st?m.timer:{st:'done',left:0};
   if(obs.st!=='done'){var bk=s.phase+':'+s.round+':'+s.sdRound;if(beginKey===bk&&prevSt==='done'&&obsWasLive)beginKey=null;obsWasLive=true}
-  var skippedObs=prevSt&&prevSt!=='done'&&obs.st==='done'&&!first;
+  var endedObs=prevSt==='running'&&obs.st==='done'&&obs.how==='end'&&prevEnd;
+  var skippedObs=prevSt&&prevSt!=='done'&&obs.st==='done'&&!endedObs;
   tEnd=obs.st==='running'?Date.now()+Math.min(obs.ms!=null?obs.ms:obs.left*1000,(obs.full||9999)*1000):0;
   var ckey=s.phase+':'+s.round+':'+s.sdRound;
   if(firstState||!last)cardKey=ckey;
   else if((s.phase==='round'||s.phase==='sd')&&ckey!==cardKey&&((last.popup&&!s.popup)||(last.phase==='setup'&&s.phase==='round'))){cardKey=ckey;showCard(s)}
   firstState=false;
   last=s;render();upd();
-  if(typeof skippedObs!=='undefined'&&skippedObs)showBegin();
+  if(endedObs)scheduleBegin(prevEnd);else if(skippedObs)showBegin();
 }
 function showConnect(){$('ch').innerHTML=brandTitle();$('connect').className='on';$('ci').value=code||'';setTimeout(function(){$('ci').focus()},50)}
 $('cf').addEventListener('submit',function(e){e.preventDefault();var v=$('ci').value.trim().toUpperCase();if(v.length!==4)return;code=v;try{localStorage.setItem('botb-display-code',v)}catch(x){}$('connect').className='';first=true;connect()});
@@ -239,7 +240,7 @@ $('fs').addEventListener('click',function(){var d=document.documentElement;if(do
 /* ---------- elimination sounds ---------- */
 var SFX=["ack", "bonk", "bruh", "explosion", "fail", "fail-trumpet", "gunshot", "lego-die", "mystery", "oof", "punch", "punch-hd", "snake", "vine-boom", "wasted", "wilhelm", "yoda"],sfxOn=true,lastSfx=null,sfx={};
 try{sfxOn=localStorage.getItem('botb-sound')!=='off'}catch(e){}
-var SV='?v=16',AC=null,BUF={};
+var SV='?v=17',AC=null,BUF={};
 try{var ACtor=window.AudioContext||window.webkitAudioContext;if(ACtor)AC=new ACtor({latencyHint:'interactive'})}catch(e){}
 function loadSnd(key,url){
   if(!AC){var a=new Audio(url);a.preload='auto';BUF[key]=a;return}
@@ -385,7 +386,7 @@ function showBegin(){
   if(!last||!(last.phase==='round'||last.phase==='sd')||!last.queue.length)return;
   var key=last.phase+':'+last.round+':'+last.sdRound;if(beginKey===key)return;beginKey=key;
   var p=last.players.filter(function(x){return x.id===last.queue[0]})[0];if(!p)return;
-  if(sfxOn)playKey('begin');
+  if(sfxOn&&!beginSoundDone)playKey('begin');beginSoundDone=false;
   var el=$('begin'),wl=[{w:'Begin climbing!',c:'var(--k)'}];
   el.className='';void el.offsetWidth;
   el.innerHTML='<div class="bn">'+esc(p.name)+'</div><div style="font-size:'+fsize(wl,10,18,true)+'">'+fword(wl,true)+'</div>';
@@ -396,7 +397,16 @@ function showBegin(){
 }
 function fitBegin(){var n=document.querySelector('#begin .bn');if(!n)return;var sz=Math.min(innerWidth*0.11,240);n.style.fontSize=sz+'px';while((n.scrollWidth>n.clientWidth+1||n.offsetHeight>innerHeight*0.45)&&sz>40){sz-=6;n.style.fontSize=sz+'px'}}
 // natural end: fire on the local clock the instant the countdown hits zero
-setInterval(function(){if(obs.st==='running'&&tEnd&&Date.now()>=tEnd)showBegin()},50);
+/* natural end: schedule the impact on the audio clock (latency compensated) and the sign for the exact moment the countdown hits zero */
+var beginSoundDone=false,beginTimer=null,beginFor=0;
+function scheduleBegin(endAt){
+  if(!endAt||beginFor===endAt||!last)return;beginFor=endAt;
+  var key=last.phase+':'+last.round+':'+last.sdRound;if(beginKey===key)return;
+  var now=Date.now(),lat=AC?((AC.baseLatency||0)+(AC.outputLatency||0))*1000:0;
+  if(sfxOn&&AC&&AC.state==='running'&&BUF.begin instanceof AudioBuffer){var src=AC.createBufferSource();src.buffer=BUF.begin;src.connect(AC.destination);src.start(AC.currentTime+Math.max(0,(endAt-now-lat)/1000));beginSoundDone=true}
+  clearTimeout(beginTimer);beginTimer=setTimeout(showBegin,Math.max(0,endAt-now));
+}
+setInterval(function(){if(obs.st==='running'&&tEnd&&tEnd-Date.now()<=400)scheduleBegin(tEnd)},50);
 function showCard(s){
   playRound();
   var el=$('card'),big,sub,len;

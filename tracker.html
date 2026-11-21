@@ -120,9 +120,9 @@ function obsAct(a){var o=S.obs;if(!o)return;
   if(a==='obs-start'&&(o.st==='pending'||o.st==='paused')){o.st='running';o.endAt=Date.now()+o.left*1000}
   else if(a==='obs-pause'&&o.st==='running'){o.left=obsLeft();o.st='paused';delete o.endAt}
   else if(a==='obs-reset'){S.obs={st:'pending',left:obsLen()}}
-  else if(a==='obs-skip'){S.obs={st:'done',left:0}}
+  else if(a==='obs-skip'){S.obs={st:'done',left:0,how:'skip'}}
 }
-setInterval(function(){var o=S.obs;if(!o||o.st!=='running')return;var l=obsLeft();var el=document.getElementById('tm');if(el)el.textContent=fmt(l);if(l<=0){S.obs={st:'done',left:0};save();render()}},250);
+setInterval(function(){var o=S.obs;if(!o||o.st!=='running')return;var l=obsLeft();var el=document.getElementById('tm');if(el)el.textContent=fmt(l);if(l<=0){S.obs={st:'done',left:0,how:'end'};save();render()}},250);
 function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
 function tag(){return S.phase==='sd'?1000+S.sdRound:S.round}
 function eliminate(p){p.place=active().length;p.out=true;p.outRound=tag()}
@@ -243,7 +243,7 @@ function linkCode(){var c=null;try{c=localStorage.getItem('botb-code')}catch(e){
 function upCount(){return LINK.clients.filter(function(c){return c.connected}).length}
 function linkLabel(){if(Date.now()-LINK.lastSeen<15000)return 'Display connected';if(!window.mqtt)return 'Display link unavailable. Check the internet connection and reload.';return upCount()?'Waiting for a display':'Connecting to the message server'}
 function refreshLink(){var el=document.getElementById('linkst');if(el)el.textContent=linkLabel()}
-function payload(){return {type:'state',sentAt:Date.now(),s:{phase:S.phase,round:S.round,total:S.total,angle:S.angle,sdRound:S.sdRound,players:S.players,queue:S.queue,sent:S.sent,skipped:S.skipped,popup:S.popup||null,flash:S.flash||null,startLives:startLives(),names:S.phase==='setup'?S.names.split('\n').map(function(x){return x.trim()}).filter(Boolean):[]},timer:{st:S.obs?S.obs.st:'done',left:obsLeft(),ms:S.obs&&S.obs.st==='running'?Math.max(0,S.obs.endAt-Date.now()):obsLeft()*1000,full:obsLen()}}}
+function payload(){return {type:'state',sentAt:Date.now(),s:{phase:S.phase,round:S.round,total:S.total,angle:S.angle,sdRound:S.sdRound,players:S.players,queue:S.queue,sent:S.sent,skipped:S.skipped,popup:S.popup||null,flash:S.flash||null,startLives:startLives(),names:S.phase==='setup'?S.names.split('\n').map(function(x){return x.trim()}).filter(Boolean):[]},timer:{st:S.obs?S.obs.st:'done',how:S.obs&&S.obs.how||'',left:obsLeft(),ms:S.obs&&S.obs.st==='running'?Math.max(0,S.obs.endAt-Date.now()):obsLeft()*1000,full:obsLen()}}}
 function pub(c,m){if(c.connected)try{c.publish(topic('state'),m,{retain:true,qos:0})}catch(e){}}
 function broadcast(){if(!LINK.code)return;var m=JSON.stringify(payload());LINK.clients.forEach(function(c){pub(c,m)})}
 function startLink(){
