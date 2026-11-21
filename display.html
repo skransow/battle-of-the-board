@@ -94,10 +94,10 @@ footer .chip{border:2px solid var(--w);color:var(--w);padding:.1em .6em}
 #pop h1{margin-bottom:3.4vh!important}
 #card{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4vh;z-index:25;padding:4vw;background:radial-gradient(circle,rgba(227,18,27,.22) 0 1.2px,transparent 1.8px) 0 0/7px 7px,var(--k)}
 #card.on{display:flex;opacity:1}
-#begin{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:3vh;z-index:26;padding:4vw;background:radial-gradient(circle,rgba(0,0,0,.14) 0 1.2px,transparent 1.8px) 0 0/7px 7px,var(--red);color:var(--k)}
+#begin{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:3vh;z-index:26;padding:4vw;background:radial-gradient(circle,rgba(0,0,0,.08) 0 1.2px,transparent 1.8px) 0 0/7px 7px,var(--w);color:var(--k)}
 #begin.on{display:flex;opacity:1}
 #begin.on.bye{opacity:0;transition:opacity .5s ease-in}
-#begin .bn{font:400 clamp(60px,11vw,240px)/.95 Anton,Impact,sans-serif;text-transform:uppercase;color:var(--w);overflow-wrap:break-word;max-width:92vw}
+#begin .bn{font:400 clamp(60px,11vw,240px)/.95 Anton,Impact,sans-serif;text-transform:uppercase;color:var(--k);overflow-wrap:break-word;max-width:92vw}
 #card.on.bye{opacity:0;transition:opacity .6s ease-in}
 #card .cs{font-size:clamp(18px,2.6vw,50px);letter-spacing:.06em;color:var(--w)}
 #pop.on{display:flex}
@@ -394,7 +394,7 @@ function showBegin(){
   var key=last.phase+':'+last.round+':'+last.sdRound;if(beginKey===key)return;beginKey=key;
   var p=last.players.filter(function(x){return x.id===last.queue[0]})[0];if(!p)return;
   if(sfxOn&&!beginSoundDone)playKey('begin');beginSoundDone=false;
-  var el=$('begin'),wl=[{w:'Begin climbing!',c:'var(--k)'}];
+  var el=$('begin'),wl=[{w:'Begin climbing!',c:'var(--red)'}];
   el.className='';void el.offsetWidth;
   el.innerHTML='<div class="bn">'+esc(p.name)+'</div><div style="font-size:'+fsize(wl,10,18,true)+'">'+fword(wl,true)+'</div>';
   el.className='on';fitBegin();
