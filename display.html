@@ -231,7 +231,7 @@ $('fs').addEventListener('click',function(){var d=document.documentElement;if(do
 /* ---------- elimination sounds ---------- */
 var SFX=["ack", "bonk", "bruh", "explosion", "fail", "fail-trumpet", "gunshot", "lego-die", "mystery", "oof", "punch", "punch-hd", "snake", "vine-boom", "wasted", "wilhelm", "yoda"],sfxOn=true,lastSfx=null,sfx={};
 try{sfxOn=localStorage.getItem('botb-sound')!=='off'}catch(e){}
-var SV='?v=14',AC=null,BUF={};
+var SV='?v=15',AC=null,BUF={};
 try{var ACtor=window.AudioContext||window.webkitAudioContext;if(ACtor)AC=new ACtor({latencyHint:'interactive'})}catch(e){}
 function loadSnd(key,url){
   if(!AC){var a=new Audio(url);a.preload='auto';BUF[key]=a;return}
@@ -242,10 +242,10 @@ loadSnd('round','sounds/round.mp3'+SV);
 loadSnd('fall','sounds/fall.mp3'+SV);
 loadSnd('send','sounds/send.mp3'+SV);
 loadSnd('skip','sounds/skip.mp3'+SV);
-loadSnd('tick1','sounds/tick1.mp3'+SV);loadSnd('tick2','sounds/tick2.mp3'+SV);
+loadSnd('tick1','sounds/tick1.mp3'+SV);loadSnd('tick2','sounds/tick2.mp3'+SV);loadSnd('final10','sounds/final10.mp3'+SV);
 /* observation countdown ticking: one tick per second, alternating samples, scheduled on the audio clock */
 var tickSched={},tickEnd=0;
-function cancelTicks(){Object.keys(tickSched).forEach(function(k){try{tickSched[k].stop()}catch(e){}});tickSched={}}
+function cancelTicks(){Object.keys(tickSched).forEach(function(k){tickSched[k].forEach(function(x){try{x.stop()}catch(e){}})});tickSched={}}
 function tickLoop(){
   if(!AC||!sfxOn||obs.st!=='running'||!tEnd||!(BUF.tick1 instanceof AudioBuffer)||!(BUF.tick2 instanceof AudioBuffer)){if(Object.keys(tickSched).length)cancelTicks();tickEnd=0;return}
   if(tickEnd!==tEnd&&Math.abs(tickEnd-tEnd)>150){cancelTicks();tickEnd=tEnd}
@@ -253,7 +253,8 @@ function tickLoop(){
   var now=Date.now(),lat=((AC.baseLatency||0)+(AC.outputLatency||0))*1000,top=Math.ceil((tEnd-now)/1000)-1;
   for(var n=top;n>=1&&n>=top-1;n--){
     if(tickSched[n])continue;var dt=(tEnd-n*1000-now-lat)/1000;if(dt<-0.02||dt>0.4)continue;if(dt<0)dt=0;
-    var src=AC.createBufferSource();src.buffer=BUF[n%2?'tick2':'tick1'];src.connect(AC.destination);src.start(AC.currentTime+dt);tickSched[n]=src;
+    var at=AC.currentTime+dt,src=AC.createBufferSource();src.buffer=BUF[n%2?'tick2':'tick1'];src.connect(AC.destination);src.start(at);tickSched[n]=[src];
+    if(n<=10&&BUF.final10 instanceof AudioBuffer){var f=AC.createBufferSource();f.buffer=BUF.final10;f.connect(AC.destination);f.start(at);tickSched[n].push(f)}
   }
 }
 setInterval(tickLoop,100);
